@@ -1,0 +1,1923 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model activity_log {
+  id         Int       @id @default(autoincrement())
+  user_id    Int?
+  company_id Int?
+  user_name  String?   @db.VarChar(255)
+  message    String?   @db.VarChar(255)
+  type       String?   @db.VarChar(255)
+  log_id     Int?
+  log_type   String?   @db.VarChar(255)
+  date_time  DateTime? @db.Timestamp(0)
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model adv_tour_diary {
+  id              Int               @id @default(autoincrement()) @db.UnsignedInt
+  user_id         Int
+  tour_date       DateTime          @db.Date
+  status          String            @default("active") @db.VarChar(255)
+  start           DateTime?         @db.DateTime(0)
+  end             DateTime?         @db.DateTime(0)
+  start_lat       Decimal?          @db.Decimal(10, 8)
+  start_lng       Decimal?          @db.Decimal(10, 8)
+  end_lat         Decimal?          @db.Decimal(10, 8)
+  end_lng         Decimal?          @db.Decimal(10, 8)
+  company_id      Int?
+  created_at      DateTime          @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?         @db.Timestamp(0)
+  deleted_at      DateTime?         @db.Timestamp(0)
+  users           users             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "user_id_foreign_adv_tour_diary")
+  adv_tour_visits adv_tour_visits[]
+
+  @@index([user_id], map: "user_id_foreign_adv_tour_diary")
+}
+
+model adv_tour_visits {
+  id             Int            @id @default(autoincrement())
+  tour_id        Int            @db.UnsignedInt
+  user_id        Int?
+  visit_time     DateTime       @db.Time(0)
+  location_name  String         @db.Text
+  purpose        String         @db.Text
+  latitude       Decimal?       @db.Decimal(10, 8)
+  longitude      Decimal?       @db.Decimal(10, 8)
+  observations   String?        @db.Text
+  photo_path     String?        @db.Text
+  company_id     Int?
+  created_at     DateTime       @default(now()) @db.Timestamp(0)
+  updated_at     DateTime?      @db.Timestamp(0)
+  deleted_at     DateTime?      @db.Timestamp(0)
+  adv_tour_diary adv_tour_diary @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "adv_tour_id_foreign_adv_tou_visits")
+  users          users?         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "user_id_foreign_adv_tour_visits")
+
+  @@index([tour_id], map: "adv_tour_id_foreign_adv_tou_visits")
+  @@index([user_id], map: "user_id_foreign_adv_tour_visits")
+}
+
+model area_tour_assign {
+  id                 Int      @id @default(autoincrement())
+  guardId            Int
+  guardName          String   @db.VarChar(255)
+  tourId             Int
+  tour_name          String?  @db.VarChar(255)
+  supervisorId       Int
+  tourCompletionFlag Int      @default(0)
+  timestamp          DateTime @default(now()) @db.Timestamp(0)
+}
+
+model area_tour_checkpoint_status {
+  id             Int       @id @default(autoincrement())
+  guardId        Int
+  guardTourId    Int
+  round          Int?
+  checkpointId   Int
+  checkpointName String    @db.VarChar(255)
+  sequenceNo     Int
+  remark         String?   @db.Text
+  company_id     Int
+  tourLogId      Int?
+  date           DateTime  @db.Date
+  time           DateTime  @db.Time(0)
+  dateTime       DateTime? @db.DateTime(0)
+  timestamp      DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model area_tour_checkpoints {
+  id           Int                     @id @default(autoincrement())
+  pointName    String                  @db.VarChar(255)
+  sequence     Int
+  qrData       String?                 @db.VarChar(255)
+  location     String?                 @db.VarChar(255)
+  radius       Int?
+  poly_coords  Unsupported("polygon")?
+  poly_lat_lng String?                 @db.LongText
+  type         String?                 @db.VarChar(255)
+  landmark     String?                 @db.VarChar(255)
+  tourId       Int
+  site_id      Int?
+  client_id    Int?
+  company_id   Int
+  isScanned    Int                     @default(0)
+  timestamp    DateTime                @default(now()) @db.Timestamp(0)
+}
+
+model area_tour_log {
+  id            Int       @id @default(autoincrement())
+  tourId        Int
+  tourName      String?   @db.VarChar(255)
+  round         Int?
+  guardId       Int
+  guardName     String?   @db.VarChar(255)
+  site_id       Int?
+  site_name     String?   @db.VarChar(255)
+  client_id     Int?
+  company_id    Int
+  date          DateTime  @db.Date
+  startTime     DateTime  @db.Time(0)
+  startDateTime DateTime? @db.DateTime(0)
+  endTime       DateTime? @db.Time(0)
+  endDateTime   DateTime? @db.DateTime(0)
+  totalTime     DateTime? @db.Time(0)
+  totalTimeDisp String?   @db.VarChar(255)
+  tourDate      DateTime? @db.Date
+  isEnded       Int       @default(0)
+  timestamp     DateTime  @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model area_tours {
+  id            Int       @id @default(autoincrement())
+  tour_name     String    @db.VarChar(255)
+  site_id       Int?
+  site_name     String?   @db.VarChar(255)
+  client_id     Int?
+  company_id    Int
+  checkpointNum Int?
+  qrData        String?   @db.VarChar(255)
+  landmark      String?   @db.VarChar(255)
+  tourDate      DateTime? @db.Date
+  reset_after   Int?
+  timestamp     DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model assets {
+  id          Int       @id @default(autoincrement()) @db.UnsignedInt
+  company_id  Int       @db.UnsignedInt
+  name        String
+  category    String?
+  condition   String    @default("Good")
+  year        Int?
+  description String?   @db.Text
+  photo       String?
+  photos      String?   @db.LongText
+  location    String?   @db.VarChar(255)
+  created_by  Int?
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  users       users?    @relation(fields: [created_by], references: [id], onUpdate: SetNull, map: "created_by_foreign_assets")
+
+  @@index([company_id], map: "assets_company_id_index")
+  @@index([created_by], map: "created_by_foreign_assets")
+}
+
+model assigned_companies {
+  id         Int      @id @default(autoincrement())
+  company_id String   @db.VarChar(255)
+  user_id    Int
+  user_name  String   @db.VarChar(255)
+  role_id    Int
+  timestamp  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model assigned_for_maintenance {
+  id              Int             @id @default(autoincrement())
+  user_id         Int
+  user_name       String          @db.VarChar(255)
+  block_id        Int?
+  floor_id        Int?
+  building_id     Int?
+  site_id         Int
+  client_id       Int
+  company_id      Int
+  created_at      DateTime        @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?       @db.Timestamp(0)
+  deleted_at      DateTime?       @db.Timestamp(0)
+  blocks          blocks?         @relation(fields: [block_id], references: [id], onDelete: Cascade, map: "block_id_foreign_assigned_for_maintenance")
+  buildings       buildings?      @relation(fields: [building_id], references: [id], onDelete: Cascade, map: "building_id_foreign_assigned_for_maintenance")
+  client_details  client_details  @relation(fields: [client_id], references: [id], onDelete: Cascade, map: "client_id_foreign_assigned_for_maintenance")
+  company_details company_details @relation(fields: [company_id], references: [id], onDelete: Cascade, map: "company_id_foreign_assigned_for_maintenance")
+  floors          floors?         @relation(fields: [floor_id], references: [id], onDelete: Cascade, map: "floor_id_foreign_assigned_for_maintenance")
+  site_details    site_details    @relation(fields: [site_id], references: [id], onDelete: Cascade, map: "site_id_foreign_assigned_for_maintenance")
+  users           users           @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_id_foreign_assigned_for_maintenance")
+
+  @@index([block_id], map: "block_id_foreign_assigned_for_maintenance")
+  @@index([building_id], map: "building_id_foreign_assigned_for_maintenance")
+  @@index([client_id], map: "client_id_foreign_assigned_for_maintenance")
+  @@index([company_id], map: "company_id_foreign_assigned_for_maintenance")
+  @@index([floor_id], map: "floor_id_foreign_assigned_for_maintenance")
+  @@index([site_id], map: "site_id_foreign_assigned_for_maintenance")
+  @@index([user_id], map: "user_id_foreign_assigned_for_maintenance")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model attendance {
+  id                Int       @id @default(autoincrement())
+  name              String    @db.VarChar(255)
+  user_id           Int
+  company_id        Int
+  geo_id            String?   @db.VarChar(255)
+  geo_name          String?   @db.VarChar(255)
+  entry_date_time   String    @db.VarChar(255)
+  entryDateTime     DateTime? @db.Timestamp(0)
+  entry_time        String?   @db.VarChar(255)
+  exit_date_time    String?   @db.VarChar(255)
+  exit_time         String?   @db.VarChar(255)
+  time_difference   String?   @db.VarChar(255)
+  time_calculation  DateTime? @db.Time(6)
+  duration_for_calc String?   @db.VarChar(255)
+  gpsTime           DateTime? @db.Time(2)
+  date              String    @db.VarChar(255)
+  dateFormat        DateTime  @db.Date
+  site_id           Int?
+  site_name         String?   @db.VarChar(255)
+  supervisor_id     String?   @db.VarChar(255)
+  supervisor_name   String?   @db.VarChar(255)
+  client_id         Int?
+  client_name       String?   @db.VarChar(255)
+  role_id           Int
+  photo             String?   @db.VarChar(255)
+  attendance_flag   Int       @default(0)
+  status            Int       @default(1)
+  inOutStatus       String    @db.VarChar(255)
+  emergency_attend  Int       @default(0)
+  approvedBy        String?   @db.VarChar(255)
+  approvedById      Int?
+  lateTime          String?   @db.VarChar(255)
+  is_offline        Boolean   @default(false)
+  location          String?   @db.Text
+  timestamp         DateTime  @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model attendance_gps {
+  id                Int       @id @default(autoincrement())
+  name              String    @db.VarChar(255)
+  user_id           Int
+  company_id        String    @db.VarChar(255)
+  geo_id            String    @db.VarChar(255)
+  geo_name          String    @db.VarChar(255)
+  entry_date_time   String    @db.VarChar(255)
+  entry_time        String?   @db.VarChar(255)
+  exit_date_time    String?   @db.VarChar(255)
+  exit_time         String?   @db.VarChar(255)
+  time_difference   String?   @db.VarChar(255)
+  time_calculation  DateTime? @db.Time(6)
+  duration_for_calc String?   @db.VarChar(255)
+  date              String    @db.VarChar(255)
+  dateFormat        DateTime  @db.Date
+  site_id           Int?
+  site_name         String?   @db.VarChar(255)
+  supervisor_id     String?   @db.VarChar(255)
+  supervisor_name   String?   @db.VarChar(255)
+  client_id         Int?
+  client_name       String?   @db.VarChar(255)
+  role_id           Int
+  photo             String?   @db.VarChar(255)
+  attendance_flag   Int       @default(0)
+  status            Int       @default(1)
+  inOutStatus       String    @db.VarChar(255)
+  emergency_attend  Int       @default(0)
+  lateTime          String?   @db.VarChar(255)
+  timestamp         DateTime  @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model attendance_requests {
+  id              Int       @id @default(autoincrement())
+  guard_id        Int
+  guard_name      String    @db.VarChar(255)
+  geo_id          String?   @db.VarChar(255)
+  geo_name        String?   @db.VarChar(255)
+  site_id         Int?
+  site_name       String?   @db.VarChar(255)
+  remark          String?   @db.Text
+  attendance_type String    @db.VarChar(255)
+  supervisor_id   Int?
+  company_id      String    @db.VarChar(255)
+  client_id       Int?
+  photo           String?   @db.VarChar(255)
+  status          String    @default("Pending") @db.VarChar(255)
+  date            String    @db.VarChar(255)
+  time            String    @db.VarChar(255)
+  dateTime        String?   @db.VarChar(255)
+  entryDateTime   DateTime? @db.Timestamp(0)
+  dateFormat      DateTime  @db.Date
+  location        String?   @db.Text
+  attendance_id   Int?
+  role_id         Int?
+  action_by       Int?
+  face_matched    Boolean   @default(true)
+  is_offline      Int       @default(0)
+  timestamp       DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model azure_face_ids {
+  id            Int      @id @default(autoincrement())
+  name          String   @db.VarChar(255)
+  gen_id        String   @db.VarChar(255)
+  personId      String   @db.VarChar(255)
+  personGroupId String   @default("airavat01") @db.VarChar(255)
+  timestamp     DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model beat_features {
+  id            Int      @id @default(autoincrement())
+  layer_type    String   @db.VarChar(50)
+  name          String?  @db.VarChar(255)
+  geometry_type String   @db.VarChar(20)
+  coordinates   String   @db.LongText
+  attributes    String?  @db.LongText
+  company_id    Int      @default(46)
+  site_id       Int?
+  geofence_id   Int?
+  created_at    DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([company_id], map: "idx_company")
+  @@index([layer_type, site_id], map: "idx_layer_site")
+}
+
+model blocks {
+  id                       Int                        @id @default(autoincrement())
+  name                     String                     @db.VarChar(255)
+  description              String?                    @db.Text
+  floor_id                 Int
+  building_id              Int
+  site_id                  Int
+  client_id                Int
+  company_id               Int
+  created_at               DateTime                   @default(now()) @db.Timestamp(0)
+  updated_at               DateTime?                  @db.Timestamp(0)
+  deleted_at               DateTime?                  @db.Timestamp(0)
+  assigned_for_maintenance assigned_for_maintenance[]
+  buildings                buildings                  @relation(fields: [building_id], references: [id], onDelete: Cascade, map: "building_id_foreign_block")
+  client_details           client_details             @relation(fields: [client_id], references: [id], onDelete: Cascade, map: "client_id_foreign_block")
+  floors                   floors                     @relation(fields: [floor_id], references: [id], onDelete: Cascade, map: "floor_id_foreign_block")
+  site_details             site_details               @relation(fields: [site_id], references: [id], onDelete: Cascade, map: "site_id_foreign_block")
+  maintenance_qr           maintenance_qr[]
+  maintenance_requests     maintenance_requests[]
+
+  @@index([building_id], map: "building_id_foreign_block")
+  @@index([client_id], map: "client_id_foreign_block")
+  @@index([floor_id], map: "floor_id_foreign_block")
+  @@index([site_id], map: "site_id_foreign_block")
+}
+
+model buildings {
+  id                       Int                        @id @default(autoincrement())
+  name                     String                     @db.VarChar(255)
+  description              String?                    @db.Text
+  site_id                  Int
+  client_id                Int
+  company_id               Int
+  created_at               DateTime                   @default(now()) @db.Timestamp(0)
+  updated_at               DateTime?                  @db.Timestamp(0)
+  deleted_at               DateTime?                  @db.Timestamp(0)
+  assigned_for_maintenance assigned_for_maintenance[]
+  blocks                   blocks[]
+  client_details           client_details             @relation(fields: [client_id], references: [id], onDelete: Cascade, map: "client_id_foreign_building")
+  site_details             site_details               @relation(fields: [site_id], references: [id], onDelete: Cascade, map: "site_id_foreign_building")
+  floors                   floors[]
+  maintenance_qr           maintenance_qr[]
+  maintenance_requests     maintenance_requests[]
+
+  @@index([client_id], map: "client_id_foreign_building")
+  @@index([site_id], map: "site_id_foreign_building")
+}
+
+model cash_advances {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  title       String    @db.VarChar(255)
+  slug        String    @db.VarChar(255)
+  rate_amount Decimal   @db.Decimal(8, 2)
+  date        DateTime  @db.Date
+  user_id     Int?
+  company_id  Int?
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+
+  @@index([user_id], map: "cash_advances_employee_id_foreign")
+}
+
+model checklist {
+  id         Int      @id @default(autoincrement())
+  checkList  String   @db.Text
+  company_id Int?
+  type       String?  @db.VarChar(255)
+  typeId     Int?
+  timestamp  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model cities {
+  id         Int    @id @default(autoincrement())
+  name       String @db.VarChar(255)
+  state_code String @db.VarChar(255)
+}
+
+model client_complaints {
+  id             Int                      @id @default(autoincrement())
+  client_id      Int
+  client_name    String                   @db.VarChar(255)
+  company_id     Int
+  priority       String                   @db.VarChar(255)
+  remark         String                   @db.Text
+  photo          String?                  @db.Text
+  dateTime       DateTime                 @db.DateTime(0)
+  status         client_complaints_status @default(Awaiting)
+  actionDateTime DateTime?                @db.DateTime(0)
+  actionRemark   String?                  @db.Text
+  actionById     Int?
+  actionByName   String?                  @db.VarChar(255)
+  timestamp      DateTime                 @default(now()) @db.Timestamp(0)
+}
+
+model client_details {
+  id                       Int                        @id @default(autoincrement())
+  name                     String                     @db.VarChar(255)
+  contact                  String?                    @db.VarChar(255)
+  email                    String?                    @db.VarChar(255)
+  spokesperson             String?                    @db.VarChar(255)
+  address                  String?                    @db.VarChar(255)
+  company_id               Int
+  state                    String?                    @db.VarChar(255)
+  city                     String?                    @db.VarChar(255)
+  pincode                  String?                    @db.VarChar(255)
+  relationManager          String?                    @db.VarChar(255)
+  relationManagerContact   String?                    @db.VarChar(255)
+  isActive                 Int                        @default(1)
+  timestamp                DateTime                   @default(now()) @db.Timestamp(0)
+  assigned_for_maintenance assigned_for_maintenance[]
+  blocks                   blocks[]
+  buildings                buildings[]
+  client_visits            client_visits[]
+  floors                   floors[]
+  maintenance_qr           maintenance_qr[]
+  maintenance_requests     maintenance_requests[]
+  site_details             site_details[]
+}
+
+model client_visits {
+  id               Int             @id @default(autoincrement())
+  user_id          Int
+  user_name        String          @db.VarChar(255)
+  client_name      String          @db.VarChar(255)
+  address          String          @db.Text
+  location         String          @db.VarChar(255)
+  date             DateTime        @db.Date
+  datetime         DateTime        @db.DateTime(0)
+  photos           String?         @db.Text
+  remark           String?         @db.Text
+  nextmeetdate     DateTime?       @db.Date
+  nextmeetdatetime DateTime?       @db.DateTime(0)
+  person_met       String?         @db.Text
+  person_contact   String?         @db.Text
+  person_email     String?         @db.VarChar(255)
+  site_id          Int?
+  client_id        Int?
+  company_id       Int
+  timestamp        DateTime        @default(now()) @db.Timestamp(0)
+  client_details   client_details? @relation(fields: [client_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "client_id_foreign_visits")
+  site_details     site_details?   @relation(fields: [site_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "site_id_foreign_visits")
+
+  @@index([client_id], map: "client_id_foreign_visits")
+  @@index([site_id], map: "site_id_foreign_visits")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model company_details {
+  id                         Int                        @id @default(autoincrement())
+  name                       String                     @db.VarChar(255)
+  contact                    String                     @db.VarChar(255)
+  email                      String?                    @db.VarChar(255)
+  contact_person             String?                    @db.VarChar(255)
+  contact_person_contact     String?                    @db.VarChar(255)
+  contact_person_designation String?                    @db.VarChar(255)
+  address                    String?                    @db.VarChar(255)
+  empLimit                   Int?
+  features                   String?                    @db.Text
+  dashboardChecklist         String?                    @db.Text
+  personGroupId              String?                    @db.VarChar(255)
+  azureGroupId               String?                    @db.VarChar(255)
+  azureGroupType             String?                    @db.VarChar(255)
+  isActive                   Int                        @default(1)
+  PO_number                  String?                    @db.VarChar(255)
+  payment_receipt_no         String?                    @db.VarChar(255)
+  start_date                 DateTime?                  @db.Date
+  end_date                   DateTime?                  @db.Date
+  showCompany                Int                        @default(1)
+  late_mark                  Boolean                    @default(true)
+  is_forest                  Int                        @default(0)
+  type                       company_details_type?
+  timestamp                  DateTime                   @default(now()) @db.Timestamp(0)
+  assigned_for_maintenance   assigned_for_maintenance[]
+  maintenance_qr             maintenance_qr[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model conversations {
+  id                Int       @id @default(autoincrement())
+  name              String?   @db.VarChar(255)
+  creator_id        Int
+  receiver_id       Int
+  receiver_name     String?   @db.VarChar(255)
+  last_message      String?   @db.Text
+  last_message_date DateTime? @db.DateTime(0)
+  last_message_by   Int?
+  type              Int?
+  timestamp         DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model daily_updates {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  user_name   String   @db.VarChar(255)
+  description String   @db.Text
+  photos      String   @db.Text
+  company_id  Int
+  date        DateTime @db.Date
+  site_id     Int
+  timestamp   DateTime @default(now()) @db.DateTime(0)
+}
+
+model deductions {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name        String    @db.VarChar(255)
+  slug        String    @db.VarChar(255)
+  description String?   @db.Text
+  amount      Decimal   @db.Decimal(8, 2)
+  company_id  Int?
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+}
+
+model deleted_users {
+  id                Int       @id @default(autoincrement())
+  firstName         String    @db.VarChar(255)
+  lastName          String    @db.VarChar(255)
+  department        String?   @db.VarChar(255)
+  designation       String?   @db.VarChar(255)
+  company_id        Int
+  company_name      String    @db.VarChar(255)
+  mobile            String    @db.VarChar(255)
+  email             String?   @db.VarChar(255)
+  role_id           Int       @default(3)
+  registration_time DateTime? @db.DateTime(0)
+  deleted_by        Int?
+  user_id           Int?
+  timestamp         DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model department_hierarchy {
+  id         Int       @id @default(autoincrement())
+  parent_id  Int?
+  child_id   Int?
+  company_id Int?
+  created_at DateTime  @default(now()) @db.DateTime(0)
+  updated_at DateTime  @default(now()) @db.DateTime(0)
+  deleted_at DateTime? @db.DateTime(0)
+
+  @@index([child_id], map: "dept_foreign_child_id")
+  @@index([parent_id], map: "dept_foreign_parent_id")
+}
+
+model fcm_info {
+  id                  Int     @id @default(autoincrement())
+  user_id             String  @db.VarChar(255)
+  fcm_id              String? @db.VarChar(255)
+  imei_no             String? @db.VarChar(255)
+  role_id             String? @db.VarChar(50)
+  api_token           String? @db.Char(60)
+  otp                 Int?
+  isVerified          Int     @default(0)
+  notification_on_off Int     @default(1)
+}
+
+model field_visits {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  place_from String    @db.VarChar(255)
+  place_to   String    @db.VarChar(255)
+  purpose    String    @db.Text
+  remark     String?   @db.Text
+  latitude   Decimal?  @db.Decimal(10, 7)
+  longitude  Decimal?  @db.Decimal(10, 7)
+  photos     String?   @db.LongText
+  date       DateTime? @db.Date
+  company_id Int?
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  users      users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "user_id_foreign_field_visit")
+
+  @@index([user_id], map: "user_id_foreign_field_visit")
+}
+
+model floors {
+  id                       Int                        @id @default(autoincrement())
+  name                     String                     @db.VarChar(255)
+  description              String?                    @db.Text
+  building_id              Int
+  site_id                  Int
+  client_id                Int
+  company_id               Int
+  created_at               DateTime                   @default(now()) @db.Timestamp(0)
+  updated_at               DateTime?                  @db.Timestamp(0)
+  deleted_at               DateTime?                  @db.Timestamp(0)
+  assigned_for_maintenance assigned_for_maintenance[]
+  blocks                   blocks[]
+  buildings                buildings                  @relation(fields: [building_id], references: [id], onDelete: Cascade, map: "building_id_foreign_floor")
+  client_details           client_details             @relation(fields: [client_id], references: [id], onDelete: Cascade, map: "client_id_foreign_floor")
+  site_details             site_details               @relation(fields: [site_id], references: [id], onDelete: Cascade, map: "site_id_foreign_floor")
+  maintenance_qr           maintenance_qr[]
+  maintenance_requests     maintenance_requests[]
+
+  @@index([building_id], map: "building_id_foreign_floor")
+  @@index([client_id], map: "client_id_foreign_floor")
+  @@index([site_id], map: "site_id_foreign_floor")
+}
+
+model forest_task_user {
+  id           Int                     @id @default(autoincrement()) @db.UnsignedInt
+  task_id      Int                     @db.UnsignedInt
+  user_id      Int
+  delegated_by Int?
+  remark       String?                 @db.Text
+  status       forest_task_user_status @default(pending)
+  created_at   DateTime                @default(now()) @db.Timestamp(0)
+  updated_at   DateTime?               @db.Timestamp(0)
+  deleted_at   DateTime?               @db.Timestamp(0)
+  forest_tasks forest_tasks            @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "task_id_foreign_forest_task_user")
+  users        users                   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "user_id_foreign_forest_task_user")
+
+  @@index([task_id], map: "task_id_foreign_forest_task_user")
+  @@index([user_id], map: "user_id_foreign_forest_task_user")
+}
+
+model forest_tasks {
+  id               Int                   @id @default(autoincrement()) @db.UnsignedInt
+  subject          String                @db.Text
+  description      String?               @db.Text
+  deadline         DateTime?             @db.Date
+  created_by       Int
+  status           forest_tasks_status   @default(pending)
+  priority         forest_tasks_priority @default(Normal)
+  is_self_task     Boolean               @default(false)
+  completed_at     DateTime?             @db.DateTime(0)
+  company_id       Int?
+  created_at       DateTime              @default(now()) @db.Timestamp(0)
+  updated_at       DateTime?             @db.Timestamp(0)
+  deleted_at       DateTime?             @db.Timestamp(0)
+  forest_task_user forest_task_user[]
+  users            users                 @relation(fields: [created_by], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "created_by_foreign_forest_tasks")
+
+  @@index([created_by], map: "created_by_foreign_forest_tasks")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model groups {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(50)
+  socket_id   String?  @db.VarChar(255)
+  create_date DateTime @default(now()) @db.Timestamp(0)
+  is_active   Int      @default(1)
+}
+
+model guard_live_location_data {
+  id              Int       @id @default(autoincrement())
+  user_id         String    @db.VarChar(255)
+  name            String?   @db.VarChar(255)
+  supervisor_id   String?   @db.VarChar(255)
+  company_id      Int
+  location        String?   @db.VarChar(255)
+  battery         String?   @db.VarChar(255)
+  speed           Int       @default(0)
+  provider        String?   @db.VarChar(255)
+  date            String    @db.VarChar(255)
+  time            DateTime? @db.Time(6)
+  date_time       String    @db.VarChar(255)
+  mobile_time     String?   @db.VarChar(255)
+  shift_start     DateTime? @db.Time(2)
+  shift_end       DateTime? @db.Time(2)
+  idle_flag       Int       @default(0)
+  idle_flag_time  DateTime? @db.Time(2)
+  disconnect_flag Int       @default(0)
+  timestamp       DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model guard_location_history {
+  id             Int       @id @default(autoincrement())
+  user_id        Int
+  supervisor_id  String?   @db.VarChar(255)
+  company_id     Int
+  location       String?   @db.VarChar(255)
+  lat            Float?
+  lng            Float?
+  battery        String?   @db.VarChar(255)
+  speed          Int?
+  provider       String?   @db.VarChar(255)
+  date           String    @db.VarChar(255)
+  dateFormat     DateTime? @db.Date
+  dateTimeFormat DateTime? @db.DateTime(0)
+  time           DateTime  @db.Time(6)
+  mobile_time    String?   @db.VarChar(255)
+  timestamp      DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model guard_location_logg {
+  id                   Int      @id @default(autoincrement())
+  user_id              String   @db.VarChar(255)
+  location             String   @db.VarChar(255)
+  distance_from_center String   @db.VarChar(255)
+  diff_radius_location String   @db.VarChar(255)
+  radius               String?  @db.VarChar(255)
+  date_time            String   @db.VarChar(255)
+  timestamp            DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model guard_notification {
+  id             Int      @id @default(autoincrement())
+  user_id        Int
+  notification   String   @db.Text
+  type           String   @db.VarChar(255)
+  dateFormat     DateTime @db.Date
+  date           String   @db.VarChar(255)
+  dateTimeFormat DateTime @db.DateTime(0)
+  time           String   @db.VarChar(255)
+  readStatus     Int      @default(0)
+  company_id     Int?
+  timestamp      DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model guard_tour {
+  id                Int       @id @default(autoincrement())
+  tour_name         String    @db.VarChar(255)
+  site_id           Int?
+  site_name         String?   @db.VarChar(255)
+  client_id         Int?
+  shift_id          Int?
+  shift_name        String?   @db.VarChar(255)
+  shift_time        String?   @db.VarChar(255)
+  supervisorId      Int?
+  companyId         Int
+  checkpointNum     Int?
+  qrData            String?   @db.VarChar(255)
+  landmark          String?   @db.VarChar(255)
+  timeArray         String?   @db.Text
+  originalTimeArray String?   @db.Text
+  tourDate          DateTime? @db.Date
+  timestamp         DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model guard_tour_assign {
+  id                 Int      @id @default(autoincrement())
+  guardId            Int
+  guardName          String   @db.VarChar(255)
+  tourId             Int
+  tour_name          String?  @db.VarChar(255)
+  supervisorId       Int
+  tourCompletionFlag Int      @default(0)
+  timestamp          DateTime @default(now()) @db.Timestamp(0)
+}
+
+model guard_tour_checkpoints {
+  id         Int      @id @default(autoincrement())
+  pointName  String   @db.VarChar(255)
+  sequence   Int
+  qrData     String?  @db.VarChar(255)
+  location   String?  @db.VarChar(255)
+  radius     Int?
+  landmark   String?  @db.VarChar(255)
+  tourId     Int
+  site_id    Int?
+  client_id  Int?
+  company_id Int
+  isScanned  Int      @default(0)
+  timestamp  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model guard_tour_log {
+  id            Int       @id @default(autoincrement())
+  tourId        Int
+  tourName      String?   @db.VarChar(255)
+  round         Int?
+  guardId       Int
+  guardName     String?   @db.VarChar(255)
+  site_id       Int?
+  site_name     String?   @db.VarChar(255)
+  client_id     Int?
+  company_id    Int
+  date          DateTime  @db.Date
+  startTime     DateTime  @db.Time(0)
+  startDateTime DateTime? @db.DateTime(0)
+  endTime       DateTime? @db.Time(0)
+  endDateTime   DateTime? @db.DateTime(0)
+  totalTime     DateTime? @db.Time(0)
+  totalTimeDisp String?   @db.VarChar(255)
+  tourDate      DateTime? @db.Date
+  isEnded       Int       @default(0)
+  timestamp     DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model incidence_checklist {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  type       String?   @db.VarChar(255)
+  type_id    Int?
+  company_id Int?
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model incidence_comment {
+  id           Int       @id @default(autoincrement())
+  incidence_id Int?
+  user_id      Int?
+  user_name    String?   @db.VarChar(200)
+  client_id    Int?
+  site_id      Int?
+  company_id   Int?
+  comment      String    @db.Text
+  status       String?   @db.Text
+  date_time    DateTime? @db.DateTime(0)
+  created_at   DateTime  @default(now()) @db.DateTime(0)
+  updated_at   DateTime  @default(now()) @db.DateTime(0)
+  deleted_at   DateTime? @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model incidence_details {
+  id                       Int       @id @default(autoincrement())
+  inc_id                   String?   @db.VarChar(255)
+  type                     String    @db.VarChar(255)
+  checkList                String?   @db.VarChar(255)
+  checkListId              String?   @db.VarChar(255)
+  remark                   String?   @db.MediumText
+  guard_id                 Int
+  guard_name               String    @db.VarChar(255)
+  supervisor_id            Int?
+  admin_id                 Int?
+  company_id               Int
+  client_id                Int?
+  site_id                  Int
+  site_name                String    @db.VarChar(255)
+  location                 String?   @db.VarChar(255)
+  photo                    String?   @db.MediumText
+  date                     String    @db.VarChar(255)
+  time                     String    @db.VarChar(255)
+  dateFormat               DateTime? @db.Date
+  action                   String?   @db.VarChar(255)
+  actionRemark             String?   @db.VarChar(255)
+  adminRemark              String?   @db.MediumText
+  supervisorRemark         String?   @db.MediumText
+  actionDate               String?   @db.VarChar(255)
+  actionTime               String?   @db.VarChar(255)
+  adminActionDateTime      DateTime? @db.Timestamp(0)
+  supervisorActionDateTime DateTime? @db.DateTime(2)
+  status                   String?   @db.VarChar(255)
+  statusFlag               Int       @default(0)
+  priority                 String?   @default("Low") @db.VarChar(255)
+  priorityFlag             Int?      @default(2)
+  timestamp                DateTime  @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model internal_users {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  contact   String   @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  email     String?  @db.VarChar(255)
+  role_id   Int
+  fcm_token String?  @db.VarChar(255)
+  api_token String?  @db.VarChar(255)
+  isActive  Int      @default(1)
+  timestamp DateTime @default(now()) @db.Timestamp(0)
+}
+
+model jal_shakti {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  user_name  String    @db.VarChar(255)
+  gat_no     String    @db.VarChar(255)
+  fund_type  String    @db.VarChar(255)
+  photos     String?   @db.Text
+  location   String?   @db.VarChar(255)
+  date       DateTime  @db.Date
+  datetime   DateTime  @default(now()) @db.DateTime(0)
+  company_id Int
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model leave {
+  id           Int          @id @default(autoincrement())
+  user_id      Int
+  user_name    String       @db.VarChar(255)
+  company_id   Int
+  site_id      Int
+  role_id      Int
+  type         String       @db.VarChar(255)
+  duration     String       @db.VarChar(255)
+  fromDate     DateTime     @db.Date
+  toDate       DateTime     @db.Date
+  requested_on DateTime     @db.DateTime(0)
+  reason       String?      @db.Text
+  status       leave_status @default(Awaiting)
+  action_on    DateTime?    @db.DateTime(0)
+  actionById   Int?
+  actionByName String?      @db.VarChar(255)
+  actionRemark String?      @db.Text
+  timestamp    DateTime     @default(now()) @db.Timestamp(0)
+}
+
+model leave_adjustment {
+  id              Int       @id @default(autoincrement()) @db.UnsignedInt
+  user_id         Int
+  no_of_days      Decimal   @db.Decimal(19, 15)
+  leave_type_id   Int       @db.UnsignedInt
+  from_date       DateTime? @db.DateTime(0)
+  to_date         DateTime? @db.DateTime(0)
+  credited_date   DateTime? @db.DateTime(0)
+  note            String?   @db.VarChar(255)
+  adjustment_type Int       @default(0) @db.UnsignedInt
+  deleted         Boolean   @default(false)
+  created_by_id   Int?
+  created_by_name String?   @db.VarChar(255)
+  created_at      DateTime? @db.Timestamp(0)
+  company_id      Int
+  updated_at      DateTime? @db.Timestamp(0)
+  deleted_at      DateTime? @db.Timestamp(0)
+
+  @@index([adjustment_type], map: "adjustment_type")
+  @@index([created_by_id], map: "created_by_id")
+  @@index([user_id], map: "emp_number")
+  @@index([leave_type_id], map: "leave_type_id")
+}
+
+model leave_comment {
+  id                    Int       @id @default(autoincrement())
+  leave_id              Int
+  created               DateTime? @db.DateTime(0)
+  created_by_id         Int?
+  created_by_emp_number Int?
+  comments              String?   @db.VarChar(255)
+  company_id            Int
+  created_at            DateTime? @db.Timestamp(0)
+  updated_at            DateTime? @db.Timestamp(0)
+  deleted_at            DateTime? @db.Timestamp(0)
+
+  @@index([created_by_emp_number], map: "created_by_emp_number")
+  @@index([created_by_id], map: "created_by_id")
+  @@index([leave_id], map: "leave_id")
+}
+
+model leave_entitlement_adjustment {
+  id             Int       @id @default(autoincrement())
+  adjustment_id  Int       @db.UnsignedInt
+  entitlement_id Int       @db.UnsignedInt
+  length_days    Decimal?  @db.Decimal(4, 2)
+  company_id     Int
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+  deleted_at     DateTime? @db.Timestamp(0)
+
+  @@index([adjustment_id], map: "adjustment_id")
+  @@index([entitlement_id], map: "entitlement_id")
+}
+
+model leave_entitlement_type {
+  id          Int       @id @default(autoincrement()) @db.UnsignedInt
+  name        String    @db.VarChar(50)
+  is_editable Boolean   @default(false)
+  company_id  Int
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+}
+
+model leave_entitlements {
+  id               Int         @id @default(autoincrement()) @db.UnsignedInt
+  user_id          Int
+  no_of_days       Decimal     @db.Decimal(19, 15)
+  days_used        Decimal     @default(0.0000) @db.Decimal(8, 4)
+  leave_type_id    Int
+  from_date        DateTime    @db.Date
+  to_date          DateTime?   @db.Date
+  credited_date    DateTime?   @db.DateTime(0)
+  note             String?     @db.VarChar(255)
+  entitlement_type Int         @db.UnsignedInt
+  deleted          Boolean     @default(false)
+  created_by_id    Int?
+  company_id       Int
+  created_at       DateTime?   @db.Timestamp(0)
+  updated_at       DateTime?   @db.Timestamp(0)
+  deleted_at       DateTime?   @db.Timestamp(0)
+  leave_types      leave_types @relation(fields: [leave_type_id], references: [id], onDelete: Cascade, map: "leave_type_foreign_entitle")
+
+  @@index([created_by_id], map: "created_by_id")
+  @@index([user_id], map: "emp_number")
+  @@index([entitlement_type], map: "entitlement_type")
+  @@index([leave_type_id], map: "leave_type_id")
+}
+
+model leave_holiday {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  date       DateTime  @db.Date
+  recurring  Int
+  length     Decimal?  @db.Decimal(4, 2)
+  company_id Int
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model leave_leave_entitlement {
+  id             Int       @id @default(autoincrement())
+  leave_id       Int
+  entitlement_id Int       @db.UnsignedInt
+  length_days    Decimal?  @db.Decimal(6, 4)
+  company_id     Int
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+  deleted_at     DateTime? @db.Timestamp(0)
+
+  @@index([entitlement_id], map: "entitlement_id")
+  @@index([leave_id], map: "leave_id")
+}
+
+model leave_period_history {
+  id                       Int       @id @default(autoincrement())
+  leave_period_start_month Int
+  leave_period_start_day   Int
+  company_id               Int
+  created_at               DateTime  @db.Date
+  updated_at               DateTime? @db.Timestamp(0)
+  deleted_at               DateTime? @db.Timestamp(0)
+}
+
+model leave_request {
+  id            Int      @id @default(autoincrement()) @db.UnsignedInt
+  leave_type_id Int      @db.UnsignedInt
+  date_applied  DateTime @db.Date
+  emp_number    Int
+  company_id    Int
+  created_at    DateTime @default(now()) @db.Timestamp(0)
+  updated_at    DateTime @default(now()) @db.Timestamp(0)
+  deleted_at    DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([emp_number], map: "emp_number")
+  @@index([leave_type_id], map: "leave_type_id")
+}
+
+model leave_request_comment {
+  id                    Int       @id @default(autoincrement())
+  leave_request_id      Int       @db.UnsignedInt
+  company_id            Int
+  created               DateTime? @db.DateTime(0)
+  created_by_id         Int?
+  created_by_emp_number Int?
+  comments              String?   @db.VarChar(255)
+  updated_at            DateTime  @default(now()) @db.Timestamp(0)
+  deleted_at            DateTime  @default(now()) @db.Timestamp(0)
+
+  @@index([created_by_emp_number], map: "created_by_emp_number")
+  @@index([created_by_id], map: "created_by_id")
+  @@index([leave_request_id], map: "leave_request_id")
+}
+
+model leave_status {
+  id     Int    @id @default(autoincrement())
+  status Int    @db.SmallInt
+  name   String @db.VarChar(100)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model leave_types {
+  id                                   Int                  @id @default(autoincrement())
+  name                                 String               @db.VarChar(255)
+  type                                 String               @db.VarChar(255)
+  description                          String?              @db.Text
+  accural                              Boolean              @default(false)
+  accural_type                         String               @db.VarChar(255)
+  accural_date                         String               @db.Text
+  accural_month                        String?              @db.Text
+  accural_days                         Float                @db.Float
+  reset                                Boolean              @default(false)
+  reset_type                           String               @db.VarChar(255)
+  reset_date                           String               @db.Text
+  reset_month                          String?              @db.Text
+  carry_forward                        Boolean?
+  carry_frw_num                        Float?               @db.Float
+  carry_frw_unit                       String               @db.VarChar(255)
+  carry_frw_limit                      Float?               @db.Float
+  encashment                           Boolean
+  encash_num                           Float?               @db.Float
+  encash_unit                          String               @db.VarChar(255)
+  encash_limit                         Float?               @db.Float
+  exclude_in_reports_if_no_entitlement Int                  @default(0)
+  company_id                           Int?
+  leave_per_month                      Int                  @default(0)
+  created_at                           DateTime             @default(now()) @db.Timestamp(0)
+  updated_at                           DateTime?            @db.Timestamp(0)
+  deleted_at                           DateTime?            @db.Timestamp(0)
+  leave_entitlements                   leave_entitlements[]
+}
+
+model leaves {
+  id              Int           @id @default(autoincrement())
+  user_id         Int
+  user_name       String        @db.VarChar(255)
+  company_id      Int
+  site_id         String?       @db.Text
+  role_id         Int
+  leave_type_id   Int?
+  leave_type_name String        @db.VarChar(255)
+  duration        String        @db.VarChar(255)
+  fromDate        DateTime      @db.Date
+  toDate          DateTime      @db.Date
+  days            Float?        @db.Float
+  from_time       DateTime?     @db.Time(0)
+  to_time         DateTime?     @db.Time(0)
+  requested_on    DateTime      @db.DateTime(0)
+  reason          String?       @db.Text
+  status_id       Int?
+  status          leaves_status @default(Awaiting)
+  is_paid         Int           @default(1)
+  action_on       DateTime?     @db.DateTime(0)
+  actionById      Int?
+  actionByName    String?       @db.VarChar(255)
+  actionRemark    String?       @db.Text
+  created_at      DateTime?     @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?     @db.Timestamp(0)
+  deleted_at      DateTime?     @db.Timestamp(0)
+
+  @@index([leave_type_id], map: "leave_type_foreign_leave")
+}
+
+model log_activities {
+  id         Int      @id @default(autoincrement())
+  subject    String?  @db.VarChar(255)
+  url        String?  @db.Text
+  method     String?  @db.VarChar(255)
+  ip         Int?
+  agent      String?  @db.Text
+  user_id    Int?
+  created_at DateTime @db.DateTime(0)
+  updated_at DateTime @db.DateTime(0)
+}
+
+model maintenance_qr {
+  id                   Int                    @id @default(autoincrement())
+  name                 String                 @db.Text
+  description          String?                @db.Text
+  qr_data              String                 @db.Text
+  block_id             Int
+  floor_id             Int
+  building_id          Int
+  site_id              Int
+  client_id            Int
+  company_id           Int
+  created_at           DateTime               @default(now()) @db.Timestamp(0)
+  updated_at           DateTime?              @db.Timestamp(0)
+  deleted_at           DateTime?              @db.Timestamp(0)
+  blocks               blocks                 @relation(fields: [block_id], references: [id], onDelete: Cascade, map: "block_id_foreign_maint_qr")
+  buildings            buildings              @relation(fields: [building_id], references: [id], onDelete: Cascade, map: "building_id_foreign_maint_qr")
+  client_details       client_details         @relation(fields: [client_id], references: [id], onDelete: Cascade, map: "client_id_foreign_maint_qr")
+  company_details      company_details        @relation(fields: [company_id], references: [id], onDelete: Cascade, map: "compnay_id_foreign_maint_qr")
+  floors               floors                 @relation(fields: [floor_id], references: [id], onDelete: Cascade, map: "floor_id_foreign_maint_qr")
+  site_details         site_details           @relation(fields: [site_id], references: [id], onDelete: Cascade, map: "site_id_foreign_maint_qr")
+  maintenance_requests maintenance_requests[]
+
+  @@index([block_id], map: "block_id_foreign_maint_qr")
+  @@index([building_id], map: "building_id_foreign_maint_qr")
+  @@index([client_id], map: "client_id_foreign_maint_qr")
+  @@index([company_id], map: "compnay_id_foreign_maint_qr")
+  @@index([floor_id], map: "floor_id_foreign_maint_qr")
+  @@index([site_id], map: "site_id_foreign_maint_qr")
+}
+
+model maintenance_requests {
+  id                                              Int                                      @id @default(autoincrement())
+  requestor_id                                    Int
+  equipment_name                                  String?                                  @db.VarChar(255)
+  model_number                                    String?                                  @db.VarChar(255)
+  serial_number                                   String?                                  @db.VarChar(255)
+  maintenance_location                            String?                                  @db.VarChar(255)
+  date_of_request                                 DateTime                                 @db.Date
+  date_issue_noticed                              DateTime?                                @db.Date
+  issue_description                               String?                                  @db.Text
+  error_codes                                     String?                                  @db.VarChar(255)
+  priority_level                                  maintenance_requests_priority_level
+  previous_issues                                 String?                                  @db.Text
+  previous_maintenance                            String?                                  @db.Text
+  attachments                                     String?                                  @db.VarChar(255)
+  additional_notes                                String?                                  @db.Text
+  preferred_date                                  DateTime?                                @db.Date
+  preferred_time                                  DateTime?                                @db.Time(0)
+  type_of_maintenance                             maintenance_requests_type_of_maintenance
+  supervisor_approval                             Boolean?                                 @default(false)
+  supervisor_id                                   Int?
+  supervisor_name                                 String?                                  @db.VarChar(255)
+  approval_date                                   DateTime?                                @db.Date
+  submission_date                                 DateTime?                                @db.Date
+  maintenance_qr_id                               Int
+  block_id                                        Int
+  floor_id                                        Int
+  building_id                                     Int
+  site_id                                         Int
+  client_id                                       Int
+  company_id                                      Int
+  is_completed                                    Int                                      @default(0)
+  completed_by                                    Int?
+  completion_remark                               String?                                  @db.Text
+  created_at                                      DateTime                                 @default(now()) @db.Timestamp(0)
+  updated_at                                      DateTime?                                @db.Timestamp(0)
+  deleted_at                                      DateTime?                                @db.Timestamp(0)
+  blocks                                          blocks                                   @relation(fields: [block_id], references: [id], onUpdate: Restrict, map: "block_id_foreign_maintenance_req")
+  buildings                                       buildings                                @relation(fields: [building_id], references: [id], onUpdate: Restrict, map: "building_id_foreign_maintenance_req")
+  client_details                                  client_details                           @relation(fields: [client_id], references: [id], onUpdate: Restrict, map: "client_id_foreign_maintenance_req")
+  floors                                          floors                                   @relation(fields: [floor_id], references: [id], onUpdate: Restrict, map: "floor_id_foreign_maintenance_req")
+  maintenance_qr                                  maintenance_qr                           @relation(fields: [maintenance_qr_id], references: [id], onUpdate: Restrict, map: "maintenance_qr_id_foreign_maintenance_req")
+  users_maintenance_requests_requestor_idTousers  users                                    @relation("maintenance_requests_requestor_idTousers", fields: [requestor_id], references: [id], onUpdate: Restrict, map: "requestor_id_foreign_maintenance_req")
+  site_details                                    site_details                             @relation(fields: [site_id], references: [id], onUpdate: Restrict, map: "site_id_foreign_maintenance_req")
+  users_maintenance_requests_supervisor_idTousers users?                                   @relation("maintenance_requests_supervisor_idTousers", fields: [supervisor_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "supervisor_id_foreign_maintenance_req")
+
+  @@index([block_id], map: "block_id_foreign_maintenance_req")
+  @@index([building_id], map: "building_id_foreign_maintenance_req")
+  @@index([client_id], map: "client_id_foreign_maintenance_req")
+  @@index([floor_id], map: "floor_id_foreign_maintenance_req")
+  @@index([maintenance_qr_id], map: "maintenance_qr_id_foreign_maintenance_req")
+  @@index([requestor_id], map: "requestor_id_foreign_maintenance_req")
+  @@index([site_id], map: "site_id_foreign_maintenance_req")
+  @@index([supervisor_id], map: "supervisor_id_foreign_maintenance_req")
+}
+
+model media {
+  id              BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  attachable_type String    @db.VarChar(255)
+  attachable_id   BigInt    @db.UnsignedBigInt
+  disk            String    @default("public") @db.VarChar(255)
+  path            String    @db.VarChar(255)
+  mime            String?   @db.VarChar(255)
+  size            BigInt?   @db.UnsignedBigInt
+  company_id      Int?
+  created_at      DateTime? @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
+
+  @@index([attachable_type, attachable_id], map: "media_attachable_type_attachable_id_index")
+}
+
+model message_recipient {
+  id                 Int  @id @default(autoincrement())
+  recipient_id       Int?
+  recipient_group_id Int?
+  message_id         Int
+  is_read            Int  @default(0)
+
+  @@index([message_id], map: "message_id")
+  @@index([recipient_id], map: "message_recipient_user")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model messages {
+  id           Int      @id @default(autoincrement())
+  subject      String?  @db.VarChar(100)
+  creator_id   Int
+  creator_name String?  @db.VarChar(255)
+  receiver_id  Int?
+  group_id     Int?
+  message_body String?  @db.Text
+  isFile       Boolean  @default(false)
+  fileName     String?  @db.VarChar(255)
+  fileUrl      String?  @db.VarChar(255)
+  is_read      Int      @default(0)
+  create_date  DateTime @default(now()) @db.DateTime(0)
+
+  @@index([creator_id], map: "message_user")
+}
+
+model migrations {
+  id        Int    @id @default(autoincrement()) @db.UnsignedInt
+  migration String @db.VarChar(255)
+  batch     Int
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model notifications {
+  id                      Int       @id @default(autoincrement())
+  notification            String    @db.Text
+  type                    String    @db.VarChar(255)
+  status                  String?   @db.VarChar(255)
+  notification_id         Int
+  user_id                 Int
+  supervisor_id           Int?
+  admin_id                Int?
+  site_id                 Int?
+  company_id              Int
+  client_id               Int?
+  date                    DateTime  @db.Date
+  dateFormat              DateTime? @db.Date
+  dateTime                String?   @db.VarChar(255)
+  dateTimeFormat          DateTime? @db.DateTime(0)
+  time                    String    @db.VarChar(11)
+  action                  String?   @db.VarChar(255)
+  actionByAdmin           String?   @db.VarChar(255)
+  readStatusForSupervisor Int       @default(0)
+  readStatusForAdmin      Int       @default(0)
+  readStatusForGuard      Int       @default(0)
+  readStatusForClient     Int       @default(0)
+  timestamp               DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model overtimes {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  title       String    @db.VarChar(255)
+  slug        String    @db.VarChar(255)
+  description String?   @db.Text
+  rate_amount Decimal   @db.Decimal(8, 2)
+  hour        Float     @db.Float
+  date        DateTime  @db.Date
+  user_id     Int?
+  company_id  Int?
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+
+  @@index([user_id], map: "user_foreign_user_id")
+}
+
+model patrol_logs {
+  id                BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  company_id        BigInt          @db.UnsignedBigInt
+  patrol_session_id BigInt          @db.UnsignedBigInt
+  type              String          @db.VarChar(255)
+  payload           String          @db.LongText
+  lat               String?         @db.VarChar(50)
+  lng               String?         @db.VarChar(50)
+  notes             String?         @db.Text
+  created_at        DateTime?       @db.Timestamp(0)
+  updated_at        DateTime?       @db.Timestamp(0)
+  patrol_sessions   patrol_sessions @relation(fields: [patrol_session_id], references: [id], onDelete: Cascade, map: "patrol_logs_patrol_session_id_foreign")
+
+  @@index([company_id], map: "patrol_logs_company_id_foreign")
+  @@index([patrol_session_id], map: "patrol_logs_patrol_session_id_foreign")
+  @@index([type], map: "patrol_logs_type_index")
+}
+
+model patrol_photos {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  patrol_session_id BigInt    @db.UnsignedBigInt
+  file_path         String    @db.VarChar(255)
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+
+  @@index([patrol_session_id], map: "patrol_photos_patrol_session_id_foreign")
+}
+
+model patrol_sessions {
+  id                 BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
+  company_id         BigInt                  @db.UnsignedBigInt
+  user_id            Int                     @db.UnsignedInt
+  site_id            BigInt?                 @db.UnsignedBigInt
+  type               patrol_sessions_type    @default(Routine)
+  session            patrol_sessions_session @default(Vehicle)
+  method             String?                 @db.Text
+  started_at         DateTime                @default(now()) @db.Timestamp(0)
+  ended_at           DateTime?               @db.Timestamp(0)
+  start_lat          Decimal?                @db.Decimal(10, 7)
+  start_lng          Decimal?                @db.Decimal(10, 7)
+  end_lat            Decimal?                @db.Decimal(10, 7)
+  end_lng            Decimal?                @db.Decimal(10, 7)
+  path_geojson       String?                 @db.LongText
+  distance           Float?
+  offline_session_id String?                 @db.VarChar(50)
+  created_at         DateTime?               @db.Timestamp(0)
+  updated_at         DateTime?               @db.Timestamp(0)
+  patrol_logs        patrol_logs[]
+
+  @@index([site_id], map: "patrol_sessions_beat_id_foreign")
+  @@index([company_id], map: "patrol_sessions_company_id_foreign")
+}
+
+model payroll_components {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  slug        String?   @db.VarChar(255)
+  description String?   @db.Text
+  amount      String    @db.VarChar(255)
+  unit        String?   @db.VarChar(255)
+  company_id  Int?
+  created_at  DateTime  @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+}
+
+model registrationdata {
+  id                Int       @id @default(autoincrement())
+  firstName         String    @db.VarChar(255)
+  lastName          String    @db.VarChar(255)
+  department        String?   @db.VarChar(255)
+  designation       String?   @db.VarChar(255)
+  company_id        Int
+  company_name      String    @db.VarChar(255)
+  client_id         Int?
+  site_id           Int?
+  mobile            String    @db.VarChar(255)
+  email             String?   @db.VarChar(255)
+  role_id           Int       @default(3)
+  registrationFlag  Int       @default(0)
+  otp               String?   @db.VarChar(255)
+  registration_time DateTime? @db.DateTime(0)
+  showUser          Int       @default(1)
+  timestamp         DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model role_hierarchy {
+  id         Int       @id @default(autoincrement())
+  parent_id  Int
+  child_id   Int
+  company_id Int?
+  created_at DateTime  @default(now()) @db.DateTime(0)
+  updated_at DateTime? @db.DateTime(0)
+  deleted_at DateTime? @db.DateTime(0)
+
+  @@index([child_id], map: "role_foreign_child_id")
+  @@index([parent_id], map: "role_foreign_parent_id")
+}
+
+model role_id_list {
+  id        Int     @id @default(autoincrement())
+  role_name String  @db.VarChar(255)
+  role_id   String  @db.VarChar(255)
+  sequence  Int?
+  users     users[]
+}
+
+model roles {
+  id          Int       @id @default(autoincrement())
+  company_id  Int
+  name        String    @db.VarChar(255)
+  description String?   @db.Text
+  module      String    @db.Text
+  is_head     Int?      @default(0)
+  created_at  DateTime  @default(now()) @db.Timestamp(0)
+  updated_at  DateTime  @default(now()) @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+}
+
+model shift_assigned {
+  id            Int      @id @default(autoincrement())
+  site_id       Int
+  site_name     String   @db.VarChar(255)
+  shift_id      Int?
+  shift_name    String   @db.VarChar(255)
+  shift_time    String   @db.VarChar(255)
+  client_id     Int?
+  supervisor_id Int?
+  company_id    Int
+  timestamp     DateTime @default(now()) @db.Timestamp(0)
+}
+
+model shifts {
+  id            Int      @id @default(autoincrement())
+  shift_name    String   @db.VarChar(255)
+  shift_time    String   @db.VarChar(255)
+  supervisor_id Int?
+  company_id    Int
+  timestamp     DateTime @default(now()) @db.Timestamp(0)
+}
+
+model site_assign {
+  id            Int       @id @default(autoincrement())
+  user_id       Int
+  user_name     String    @db.VarChar(255)
+  site_id       String?   @db.Text
+  site_name     String?   @db.VarChar(255)
+  client_id     Int?
+  client_name   String?   @db.VarChar(255)
+  supervisor_id Int?
+  company_id    Int
+  startDate     DateTime? @db.Date
+  endDate       DateTime? @db.Date
+  date_range    String?   @db.VarChar(255)
+  shift_id      Int?
+  shift_time    String?   @db.VarChar(255)
+  shift_start   String?   @db.VarChar(255)
+  shift_end     String?   @db.VarChar(255)
+  shift_name    String?   @db.VarChar(255)
+  weekoff       String?   @db.VarChar(1000)
+  role_id       Int?
+  created_at    DateTime  @default(now()) @db.Timestamp(0)
+  updated_at    DateTime? @db.Timestamp(0)
+  deleted_at    DateTime? @db.Timestamp(0)
+  users         users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "user_id_foreign_site_assign")
+
+  @@index([user_id], map: "user_id_foreign_site_assign")
+}
+
+model site_details {
+  id                       Int                        @id @default(autoincrement())
+  name                     String                     @db.VarChar(255)
+  address                  String                     @db.VarChar(255)
+  state                    String                     @db.VarChar(255)
+  city                     String                     @db.VarChar(255)
+  pincode                  String                     @db.VarChar(255)
+  contactPerson            String                     @db.VarChar(255)
+  mobile                   String                     @db.VarChar(255)
+  sosContact               String?                    @db.VarChar(255)
+  email                    String?                    @db.VarChar(255)
+  earlyTime                Int?
+  lateTime                 Int?
+  siteType                 String?                    @db.VarChar(255)
+  client_id                Int?
+  client_name              String?                    @db.VarChar(255)
+  company_id               Int?
+  created_at               DateTime                   @default(now()) @db.Timestamp(0)
+  updated_at               DateTime?                  @db.Timestamp(0)
+  deleted_at               DateTime?                  @db.Timestamp(0)
+  assigned_for_maintenance assigned_for_maintenance[]
+  blocks                   blocks[]
+  buildings                buildings[]
+  client_visits            client_visits[]
+  floors                   floors[]
+  maintenance_qr           maintenance_qr[]
+  maintenance_requests     maintenance_requests[]
+  client_details           client_details?            @relation(fields: [client_id], references: [id], onDelete: Cascade, map: "client_id_foreign_site_details")
+
+  @@index([client_id], map: "client_id_foreign_site_details")
+}
+
+model site_geofences {
+  id           Int                     @id @default(autoincrement())
+  name         String                  @db.VarChar(255)
+  center       String?                 @db.VarChar(255)
+  lat          Float?
+  lng          Float?
+  radius       Int
+  type         String                  @default("Circle") @db.VarChar(50)
+  poly_coords  Unsupported("polygon")?
+  poly_lat_lng String?                 @db.LongText
+  site_id      Int
+  site_name    String?                 @db.VarChar(255)
+  client_id    Int?
+  company_id   Int
+  created_at   DateTime                @default(now()) @db.Timestamp(0)
+  updated_at   DateTime?               @db.Timestamp(0)
+  deleted_at   DateTime?               @db.Timestamp(0)
+}
+
+model site_geofences_ {
+  id           Int                     @id @default(autoincrement())
+  name         String                  @db.VarChar(255)
+  center       String?                 @db.VarChar(255)
+  lat          Float?
+  lng          Float?
+  radius       Int
+  type         String                  @default("Circle") @db.VarChar(50)
+  poly_coords  Unsupported("polygon")?
+  poly_lat_lng String?                 @db.LongText
+  site_id      Int
+  site_name    String?                 @db.VarChar(255)
+  client_id    Int?
+  company_id   Int
+  created_at   DateTime                @default(now()) @db.Timestamp(0)
+  updated_at   DateTime?               @db.Timestamp(0)
+  deleted_at   DateTime?               @db.Timestamp(0)
+}
+
+model states {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(255)
+  code String @db.VarChar(255)
+}
+
+model supervisor_live_location_data {
+  id              Int       @id @default(autoincrement())
+  user_id         String    @db.VarChar(255)
+  name            String?   @db.VarChar(255)
+  company_id      String    @db.VarChar(255)
+  location        String    @db.VarChar(255)
+  speed           Int?
+  provider        String?   @db.VarChar(255)
+  date            String    @db.VarChar(255)
+  time            DateTime? @db.Time(6)
+  date_time       String    @db.VarChar(255)
+  mobile_time     String    @db.VarChar(255)
+  shift_start     DateTime? @db.Time(6)
+  shift_end       DateTime? @db.Time(6)
+  idle_flag       Int       @default(0)
+  disconnect_flag Int       @default(0)
+  timestamp       DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model supervisor_location_history {
+  id          Int      @id @default(autoincrement())
+  user_id     String   @db.VarChar(255)
+  company_id  String   @db.VarChar(255)
+  location    String   @db.VarChar(255)
+  provider    String?  @db.VarChar(255)
+  speed       Int?
+  date        String   @db.VarChar(255)
+  time        String   @db.VarChar(255)
+  mobile_time String   @db.VarChar(255)
+  timestamp   DateTime @default(now()) @db.Timestamp(0)
+}
+
+model taluka_jal {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(255)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model task_management {
+  id            Int      @id @default(autoincrement())
+  title         String   @db.Text
+  user_id       Int
+  user_name     String   @db.VarChar(255)
+  description   String?  @db.Text
+  user_ids      String?  @db.Text
+  start_date    DateTime @db.Date
+  time          DateTime @db.DateTime(0)
+  end_date      DateTime @db.Date
+  remark        String?  @db.Text
+  assignor_id   Int?
+  assignor_name String?  @db.VarChar(255)
+  company_id    Int
+  status        String   @default("Ongoing") @db.VarChar(255)
+  timestamp     DateTime @default(now()) @db.Timestamp(0)
+}
+
+model test_table {
+  id        Int    @id @default(autoincrement())
+  test_data String @db.VarChar(255)
+}
+
+model tour_checkpoint_status {
+  id             Int       @id @default(autoincrement())
+  guardId        Int
+  guardTourId    Int
+  round          Int?
+  checkpointId   Int
+  checkpointName String    @db.VarChar(255)
+  sequenceNo     Int
+  remark         String?   @db.Text
+  company_id     Int
+  tourLogId      Int?
+  date           DateTime  @db.Date
+  time           DateTime  @db.Time(0)
+  dateTime       DateTime? @db.DateTime(0)
+  timestamp      DateTime  @default(now()) @db.Timestamp(0)
+}
+
+model tour_diary {
+  id             BigInt    @id @default(autoincrement())
+  user_id        Int
+  user_name      String?   @db.VarChar(255)
+  vehicle        String?   @db.VarChar(255)
+  from_place     String    @db.Text
+  from_location  String?   @db.VarChar(255)
+  to_place       String?   @db.Text
+  to_location    String?   @db.VarChar(255)
+  purpose        String?   @db.Text
+  remark         String?   @db.Text
+  start_time     DateTime  @db.DateTime(0)
+  end_time       DateTime? @db.DateTime(0)
+  contact_person String?   @db.VarChar(255)
+  contact_number String?   @db.VarChar(255)
+  photos         String?   @db.Text
+  site_id        Int?
+  client_id      Int?
+  company_id     Int
+  role_id        Int?
+  created_at     DateTime  @default(now()) @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+  deleted_at     DateTime? @db.Timestamp(0)
+  users          users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "user_id_foreign_tour_diary")
+
+  @@index([user_id], map: "user_id_foreign_tour_diary")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model user_groups {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  user_name   String?  @db.VarChar(255)
+  group_id    Int
+  create_date DateTime @default(now()) @db.DateTime(0)
+  is_active   Int      @default(1)
+
+  @@index([group_id], map: "user_group_group")
+  @@index([user_id], map: "user_group_user")
+}
+
+model user_ratings {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  user_name   String   @db.VarChar(255)
+  rating      Int
+  remark      String?  @db.Text
+  site_id     Int
+  site_name   String   @db.VarChar(255)
+  client_id   Int
+  client_name String   @db.VarChar(255)
+  company_id  Int
+  ratingMonth String   @db.VarChar(255)
+  date        DateTime @db.Date
+  timestamp   DateTime @default(now()) @db.Timestamp(0)
+}
+
+model user_sockets {
+  id         Int      @id @default(autoincrement())
+  person1_id Int
+  person2_id Int
+  socket_id  String   @db.VarChar(255)
+  timestamp  DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model users {
+  id                                                             Int                        @id @default(autoincrement())
+  gen_id                                                         String                     @db.VarChar(255)
+  username                                                       String?                    @db.VarChar(255)
+  code_name                                                      String?                    @db.VarChar(255)
+  name                                                           String                     @db.VarChar(255)
+  contact                                                        String                     @db.VarChar(255)
+  email                                                          String?                    @db.VarChar(255)
+  password                                                       String                     @db.VarChar(255)
+  designation                                                    String?                    @db.VarChar(255)
+  supervisor_id                                                  String?                    @db.VarChar(255)
+  client_id                                                      Int?
+  gender                                                         String?                    @db.VarChar(255)
+  dob                                                            String?                    @db.VarChar(255)
+  company_id                                                     Int
+  company_name                                                   String                     @db.VarChar(255)
+  shift_start                                                    DateTime?                  @db.Time(2)
+  shift_end                                                      DateTime?                  @db.Time(2)
+  address                                                        String?                    @db.VarChar(255)
+  profile_pic                                                    String?                    @db.VarChar(255)
+  profile_file_name                                              String?                    @db.VarChar(255)
+  imei_no                                                        String?                    @db.VarChar(255)
+  fcm_token                                                      String?                    @db.VarChar(255)
+  api_token                                                      String?                    @db.VarChar(255)
+  web_token                                                      String?                    @db.VarChar(255)
+  role_id                                                        Int
+  attendance_type                                                String                     @db.VarChar(255)
+  showUser                                                       Int                        @default(1)
+  faceRecoId                                                     String?                    @db.VarChar(255)
+  personIdFaceRecog                                              String?                    @db.VarChar(255)
+  salary                                                         Decimal?                   @db.Decimal(10, 0)
+  rate_per_hour                                                  Decimal?                   @db.Decimal(10, 0)
+  att_auto_approve                                               Boolean?                   @default(false)
+  att_req_approval_permission                                    Boolean?
+  isActive                                                       Int                        @default(1)
+  state                                                          String?                    @db.VarChar(255)
+  district                                                       String?                    @db.VarChar(255)
+  village                                                        String?                    @db.VarChar(255)
+  block                                                          String?                    @db.VarChar(255)
+  timestamp                                                      DateTime                   @default(now()) @db.Timestamp(0)
+  created_at                                                     DateTime                   @default(now()) @db.Timestamp(0)
+  updated_at                                                     DateTime?                  @db.Timestamp(0)
+  deleted_at                                                     DateTime?                  @db.Timestamp(0)
+  adv_tour_diary                                                 adv_tour_diary[]
+  adv_tour_visits                                                adv_tour_visits[]
+  assets                                                         assets[]
+  assigned_for_maintenance                                       assigned_for_maintenance[]
+  field_visits                                                   field_visits[]
+  forest_task_user                                               forest_task_user[]
+  forest_tasks                                                   forest_tasks[]
+  maintenance_requests_maintenance_requests_requestor_idTousers  maintenance_requests[]     @relation("maintenance_requests_requestor_idTousers")
+  maintenance_requests_maintenance_requests_supervisor_idTousers maintenance_requests[]     @relation("maintenance_requests_supervisor_idTousers")
+  site_assign                                                    site_assign[]
+  tour_diary                                                     tour_diary[]
+  role_id_list                                                   role_id_list               @relation(fields: [role_id], references: [id], onDelete: Cascade, map: "user_foreign_role_id")
+
+  @@index([role_id], map: "user_foreign_role_id")
+}
+
+model village_jal {
+  id        Int     @id @default(autoincrement())
+  name      String  @db.VarChar(255)
+  name_mar  String? @db.VarChar(255)
+  taluka_id Int
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model visitor_details {
+  id                Int       @id @default(autoincrement())
+  name              String    @db.VarChar(255)
+  email             String?   @db.VarChar(255)
+  mobile            String?   @db.VarChar(255)
+  person_id         Int?
+  personToMeet      String?   @db.VarChar(255)
+  purpose           String?   @db.VarChar(1000)
+  address           String?   @db.Text
+  remark            String?   @db.VarChar(500)
+  guard_id          Int?
+  supervisor_id     String?   @db.VarChar(255)
+  company_id        Int?
+  client_id         Int?
+  site_id           Int?
+  site_name         String?   @db.VarChar(255)
+  vehicle_type      String?   @db.VarChar(255)
+  vehicle_no        String?   @db.VarChar(255)
+  date              String?   @db.VarChar(50)
+  dateFormat        DateTime? @db.Date
+  entry_time        String?   @db.VarChar(255)
+  exit_time         String?   @db.VarChar(255)
+  duration          String?   @db.VarChar(255)
+  profile_pic       String?   @db.VarChar(255)
+  profile_file_name String?   @db.VarChar(255)
+  is_scheduled      Int       @default(0)
+  otp               String?   @db.VarChar(10)
+  is_approved       Int       @default(0)
+  created_at        DateTime  @default(now()) @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+  deleted_at        DateTime? @db.Timestamp(0)
+}
+
+model weekoffs {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  user_name  String    @db.VarChar(255)
+  date       DateTime  @db.Date
+  date_time  DateTime  @db.DateTime(0)
+  remark     String?   @db.Text
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+enum patrol_sessions_type {
+  Routine
+  Special
+  Joint
+  Other
+}
+
+enum forest_tasks_status {
+  pending
+  completed
+}
+
+enum forest_task_user_status {
+  pending
+  completed
+}
+
+enum patrol_sessions_session {
+  Vehicle
+  Bicycle
+  Foot
+  Other
+}
+
+enum forest_tasks_priority {
+  Normal
+  Priority
+  Urgent
+}
+
+enum client_complaints_status {
+  Awaiting
+  Resolved
+}
+
+enum maintenance_requests_priority_level {
+  Low
+  Medium
+  High
+  Urgent
+}
+
+enum leave_status {
+  Awaiting
+  Approved
+  Declined
+  Cancelled
+}
+
+enum leaves_status {
+  Awaiting
+  Approved
+  Declined
+  Cancelled
+}
+
+enum maintenance_requests_type_of_maintenance {
+  Inspection
+  Repair
+  Replacement
+  Regular_Maintenance_Check @map("Regular Maintenance Check")
+}
+
+enum company_details_type {
+  zp
+  forest
+  org
+  EMPTY_ENUM_VALUE @map("")
+}
