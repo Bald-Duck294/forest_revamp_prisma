@@ -1852,6 +1852,218 @@ model weekoffs {
   deleted_at DateTime? @db.Timestamp(0)
 }
 
+To adapt the schema for MySQL, a few specific changes are required compared to PostgreSQL:
+
+Spatial Data: MySQL uses Unsupported("geometry") or Bytes, but in Prisma, it is most common to use Unsupported("GEOMETRY").
+
+Decimal Precision: MySQL handles Decimal similarly, but we ensure the @db.Decimal attributes are explicitly defined for coordinates and area.
+
+Foreign Key Actions: MySQL is strict about index placement for foreign keys (Prisma handles this automatically).
+
+BigInt: MySQL supports BIGINT, which Prisma maps perfectly.
+
+🌲 Plantation System Prisma Schema (MySQL Compatible)
+Code snippet
+// Configure your database connection here
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// --- Models ---
+
+model Plantation {
+  id          BigInt  @id @default(autoincrement())
+  code        String  @unique
+  name        String
+  description String? @db.Text
+
+  // Phase & Status (String-based for MySQL flexibility)
+  currentPhase String @default("identification")
+  status       String @default("active")
+
+  // Relations
+  gridId     BigInt
+  grid       Grid    @relation(fields: [gridId], references: [id])
+  createdBy  BigInt
+  approvedBy BigInt?
+
+  // Timestamps
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // One-to-One / One-to-Many Relations
+  location             PlantationLocation?
+  identificationDetail IdentificationDetail?
+  measurementDetail    MeasurementDetail?
+  planningDetail       PlanningDetail?
+  plantingDetail       PlantingDetail?
+  fencingDetail        FencingDetail?
+  phaseLogs            PlantationPhaseLog[]
+  observationRecords   ObservationRecord[]
+  relocationRecords    RelocationRecord[]
+
+  @@index([gridId])
+}
+
+model Grid {
+  id          BigInt                   @id @default(autoincrement())
+  gridCode    String                   @unique
+  // MySQL Spatial Type
+  geoPolygon  Unsupported("GEOMETRY")?
+  isActive    Boolean                  @default(true)
+  createdAt   DateTime                 @default(now())
+  plantations Plantation[]
+}
+
+model PlantationLocation {
+  id           BigInt     @id @default(autoincrement())
+  plantationId BigInt     @unique
+  plantation   Plantation @relation(fields: [plantationId], references: [id])
+
+  // MySQL Spatial Type
+  geoPolygon Unsupported("POLYGON")
+  centerLat  Decimal                @db.Decimal(10, 8)
+  centerLng  Decimal                @db.Decimal(11, 8)
+  areaSqM    Decimal                @db.Decimal(12, 2)
+
+  verifiedAt DateTime?
+  createdBy  BigInt
+  createdAt  DateTime  @default(now())
+
+  // Relation for Relocation Tracking
+  relocationsFrom RelocationRecord[] @relation("OldLocation")
+  relocationsTo   RelocationRecord[] @relation("NewLocation")
+}
+
+model PlantationPhaseLog {
+  id           BigInt     @id @default(autoincrement())
+  plantationId BigInt
+  plantation   Plantation @relation(fields: [plantationId], references: [id])
+
+  previousPhase String
+  newPhase      String
+  changedBy     BigInt
+  remarks       String?  @db.Text
+  changedAt     DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@index([plantationId])
+}
+
+model IdentificationDetail {
+  id           BigInt     @id @default(autoincrement())
+  plantationId BigInt     @unique
+  plantation   Plantation @relation(fields: [plantationId], references: [id])
+
+  landOwnerName     String
+  landType          String
+  ownershipDocument String?
+  sitePhotos        Json? // MySQL supports JSON natively since 5.7.8
+  isVerified        Boolean  @default(false)
+  createdAt         DateTime @default(now())
+}
+
+model MeasurementDetail {
+  id           BigInt     @id @default(autoincrement())
+  plantationId BigInt     @unique
+  plantation   Plantation @relation(fields: [plantationId], references: [id])
+
+  totalAreaSqM         Decimal  @db.Decimal(12, 2)
+  soilType             String
+  waterSourceAvailable Boolean
+  slopeType            String
+  accessibilityNotes   String?  @db.Text
+  feasibilityScore     Decimal  @db.Decimal(5, 2)
+  createdAt            DateTime @default(now())
+}
+
+model PlanningDetail {
+  id           BigInt     @id @default(autoincrement())
+  plantationId BigInt     @unique
+  plantation   Plantation @relation(fields: [plantationId], references: [id])
+
+  plantSpecies    String
+  plantCount      Int
+  spacingPattern  String
+  estimatedBudget Decimal  @db.Decimal(15, 2)
+  approvedBudget  Decimal  @db.Decimal(15, 2)
+  timelineStart   DateTime
+  timelineEnd     DateTime
+  approvedBy      BigInt
+  createdAt       DateTime @default(now())
+}
+
+model PlantingDetail {
+  id           BigInt     @id @default(autoincrement())
+  plantationId BigInt     @unique
+  plantation   Plantation @relation(fields: [plantationId], references: [id])
+
+  plantingDate       DateTime
+  actualPlantCount   Int
+  teamSize           Int
+  attendanceVerified Boolean  @default(false)
+  beforePhotos       Json?
+  afterPhotos        Json?
+  createdAt          DateTime @default(now())
+}
+
+model FencingDetail {
+  id           BigInt     @id @default(autoincrement())
+  plantationId BigInt     @unique
+  plantation   Plantation @relation(fields: [plantationId], references: [id])
+
+  fenceType          String
+  materialUsed       String
+  boundaryLengthM    Decimal  @db.Decimal(12, 2)
+  installationCost   Decimal  @db.Decimal(15, 2)
+  verificationPhotos Json?
+  createdAt          DateTime @default(now())
+}
+
+model ObservationRecord {
+  id           BigInt     @id @default(autoincrement())
+  plantationId BigInt
+  plantation   Plantation @relation(fields: [plantationId], references: [id])
+
+  observationDate    DateTime
+  survivalCount      Int
+  survivalPercentage Decimal  @db.Decimal(5, 2)
+  avgHeightCm        Decimal  @db.Decimal(10, 2)
+  healthStatus       String
+  inspectorId        BigInt
+  photos             Json?
+  remarks            String?  @db.Text
+  createdAt          DateTime @default(now())
+
+  @@index([plantationId])
+}
+
+model RelocationRecord {
+  id           BigInt     @id @default(autoincrement())
+  plantationId BigInt
+  plantation   Plantation @relation(fields: [plantationId], references: [id])
+
+  previousLocationId BigInt
+  oldLocation        PlantationLocation @relation("OldLocation", fields: [previousLocationId], references: [id])
+
+  newLocationId BigInt
+  newLocation   PlantationLocation @relation("NewLocation", fields: [newLocationId], references: [id])
+
+  reason         String   @db.Text
+  relocatedBy    BigInt
+  relocationDate DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@index([plantationId])
+}
+
 enum patrol_sessions_type {
   Routine
   Special
