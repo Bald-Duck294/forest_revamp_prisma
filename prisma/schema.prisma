@@ -1852,27 +1852,7 @@ model weekoffs {
   deleted_at DateTime? @db.Timestamp(0)
 }
 
-To adapt the schema for MySQL, a few specific changes are required compared to PostgreSQL:
 
-Spatial Data: MySQL uses Unsupported("geometry") or Bytes, but in Prisma, it is most common to use Unsupported("GEOMETRY").
-
-Decimal Precision: MySQL handles Decimal similarly, but we ensure the @db.Decimal attributes are explicitly defined for coordinates and area.
-
-Foreign Key Actions: MySQL is strict about index placement for foreign keys (Prisma handles this automatically).
-
-BigInt: MySQL supports BIGINT, which Prisma maps perfectly.
-
-🌲 Plantation System Prisma Schema (MySQL Compatible)
-Code snippet
-// Configure your database connection here
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
-}
 
 // --- Models ---
 
