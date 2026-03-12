@@ -2,6 +2,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "./ERD.svg"
+}
+
 datasource db {
   provider = "mysql"
 }
@@ -510,6 +515,7 @@ model company_details {
   type                       company_details_type?
   timestamp                  DateTime                   @default(now()) @db.Timestamp(0)
   assigned_for_maintenance   assigned_for_maintenance[]
+  company_field_labels       company_field_labels[]
   maintenance_qr             maintenance_qr[]
 }
 
@@ -915,24 +921,24 @@ model jal_shakti {
 }
 
 model leave {
-  id           Int          @id @default(autoincrement())
+  id           Int               @id @default(autoincrement())
   user_id      Int
-  user_name    String       @db.VarChar(255)
+  user_name    String            @db.VarChar(255)
   company_id   Int
   site_id      Int
   role_id      Int
-  type         String       @db.VarChar(255)
-  duration     String       @db.VarChar(255)
-  fromDate     DateTime     @db.Date
-  toDate       DateTime     @db.Date
-  requested_on DateTime     @db.DateTime(0)
-  reason       String?      @db.Text
-  status       leave_status @default(Awaiting)
-  action_on    DateTime?    @db.DateTime(0)
+  type         String            @db.VarChar(255)
+  duration     String            @db.VarChar(255)
+  fromDate     DateTime          @db.Date
+  toDate       DateTime          @db.Date
+  requested_on DateTime          @db.DateTime(0)
+  reason       String?           @db.Text
+  status       leave_status_enum @default(Awaiting)
+  action_on    DateTime?         @db.DateTime(0)
   actionById   Int?
-  actionByName String?      @db.VarChar(255)
-  actionRemark String?      @db.Text
-  timestamp    DateTime     @default(now()) @db.Timestamp(0)
+  actionByName String?           @db.VarChar(255)
+  actionRemark String?           @db.Text
+  timestamp    DateTime          @default(now()) @db.Timestamp(0)
 }
 
 model leave_adjustment {
@@ -1352,17 +1358,17 @@ model overtimes {
 }
 
 model patrol_logs {
-  id                BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
-  company_id        BigInt          @db.UnsignedBigInt
-  patrol_session_id BigInt          @db.UnsignedBigInt
-  type              String          @db.VarChar(255)
-  payload           String          @db.LongText
-  lat               String?         @db.VarChar(50)
-  lng               String?         @db.VarChar(50)
-  notes             String?         @db.Text
-  created_at        DateTime?       @db.Timestamp(0)
-  updated_at        DateTime?       @db.Timestamp(0)
-  patrol_sessions   patrol_sessions @relation(fields: [patrol_session_id], references: [id], onDelete: Cascade, map: "patrol_logs_patrol_session_id_foreign")
+  id                BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  company_id        BigInt           @db.UnsignedBigInt
+  patrol_session_id BigInt           @db.UnsignedBigInt
+  type              patrol_logs_type
+  payload           String           @db.LongText
+  lat               String?          @db.VarChar(50)
+  lng               String?          @db.VarChar(50)
+  notes             String?          @db.Text
+  created_at        DateTime?        @db.Timestamp(0)
+  updated_at        DateTime?        @db.Timestamp(0)
+  patrol_sessions   patrol_sessions  @relation(fields: [patrol_session_id], references: [id], onDelete: Cascade, map: "patrol_logs_patrol_session_id_foreign")
 
   @@index([company_id], map: "patrol_logs_company_id_foreign")
   @@index([patrol_session_id], map: "patrol_logs_patrol_session_id_foreign")
@@ -1451,11 +1457,10 @@ model role_hierarchy {
 }
 
 model role_id_list {
-  id        Int     @id @default(autoincrement())
-  role_name String  @db.VarChar(255)
-  role_id   String  @db.VarChar(255)
+  id        Int    @id @default(autoincrement())
+  role_name String @db.VarChar(255)
+  role_id   String @db.VarChar(255)
   sequence  Int?
-  users     users[]
 }
 
 model roles {
@@ -1515,7 +1520,6 @@ model site_assign {
   created_at    DateTime  @default(now()) @db.Timestamp(0)
   updated_at    DateTime? @db.Timestamp(0)
   deleted_at    DateTime? @db.Timestamp(0)
-  users         users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "user_id_foreign_site_assign")
 
   @@index([user_id], map: "user_id_foreign_site_assign")
 }
@@ -1743,8 +1747,6 @@ model user_sockets {
 model users {
   id                                                             Int                        @id @default(autoincrement())
   gen_id                                                         String                     @db.VarChar(255)
-  username                                                       String?                    @db.VarChar(255)
-  code_name                                                      String?                    @db.VarChar(255)
   name                                                           String                     @db.VarChar(255)
   contact                                                        String                     @db.VarChar(255)
   email                                                          String?                    @db.VarChar(255)
@@ -1792,11 +1794,7 @@ model users {
   forest_tasks                                                   forest_tasks[]
   maintenance_requests_maintenance_requests_requestor_idTousers  maintenance_requests[]     @relation("maintenance_requests_requestor_idTousers")
   maintenance_requests_maintenance_requests_supervisor_idTousers maintenance_requests[]     @relation("maintenance_requests_supervisor_idTousers")
-  site_assign                                                    site_assign[]
   tour_diary                                                     tour_diary[]
-  role_id_list                                                   role_id_list               @relation(fields: [role_id], references: [id], onDelete: Cascade, map: "user_foreign_role_id")
-
-  @@index([role_id], map: "user_foreign_role_id")
 }
 
 model village_jal {
@@ -1852,6 +1850,49 @@ model weekoffs {
   deleted_at DateTime? @db.Timestamp(0)
 }
 
+model company_field_labels {
+  id              Int             @id @default(autoincrement())
+  company_id      Int
+  field_key       String          @db.VarChar(100)
+  custom_label    String?         @db.VarChar(255)
+  created_at      DateTime?       @db.Timestamp(0)
+  updated_at      DateTime?       @db.Timestamp(0)
+  company_details company_details @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "company_field_labels_ibfk_1")
+  field_masters   field_masters   @relation(fields: [field_key], references: [field_key], onDelete: Cascade, onUpdate: Restrict, map: "company_field_labels_ibfk_2")
+
+  @@unique([company_id, field_key], map: "company_id")
+  @@index([field_key], map: "field_key")
+}
+
+model field_masters {
+  id                   Int                    @id @default(autoincrement())
+  field_key            String?                @unique(map: "field_key") @db.VarChar(100)
+  default_label        String?                @db.VarChar(255)
+  created_at           DateTime?              @db.Timestamp(0)
+  updated_at           DateTime?              @db.Timestamp(0)
+  company_field_labels company_field_labels[]
+}
+
+model anukampa_records {
+  id                 Int      @id @default(autoincrement())
+  victim_name        String   @db.VarChar(255)
+  contact_number     String   @db.VarChar(15)
+  range              String   @db.VarChar(100)
+  village_name       String   @db.VarChar(255)
+  latitude           Decimal  @db.Decimal(10, 8)
+  longitude          Decimal  @db.Decimal(11, 8)
+  incident_type      String   @db.VarChar(50)
+  animal_responsible String?  @db.VarChar(100)
+  incident_date      DateTime @db.Date
+  estimated_loss     Decimal? @db.Decimal(10, 2)
+  status             String?  @default("Pending") @db.VarChar(50)
+  remarks            String?  @db.Text
+  documents          String?  @db.LongText
+  specific_details   String?  @db.LongText
+  created_at         DateTime @default(now()) @db.Timestamp(0)
+  updated_at         DateTime @default(now()) @db.Timestamp(0)
+}
+
 enum patrol_sessions_type {
   Routine
   Special
@@ -1894,7 +1935,7 @@ enum maintenance_requests_priority_level {
   Urgent
 }
 
-enum leave_status {
+enum leave_status_enum {
   Awaiting
   Approved
   Declined
@@ -1920,4 +1961,12 @@ enum company_details_type {
   forest
   org
   EMPTY_ENUM_VALUE @map("")
+}
+
+enum patrol_logs_type {
+  patrol_meta
+  animal_sighting
+  water_source
+  human_impact
+  animal_mortality
 }
