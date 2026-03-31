@@ -1850,49 +1850,6 @@ model weekoffs {
   deleted_at DateTime? @db.Timestamp(0)
 }
 
-model company_field_labels {
-  id              Int             @id @default(autoincrement())
-  company_id      Int
-  field_key       String          @db.VarChar(100)
-  custom_label    String?         @db.VarChar(255)
-  created_at      DateTime?       @db.Timestamp(0)
-  updated_at      DateTime?       @db.Timestamp(0)
-  company_details company_details @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "company_field_labels_ibfk_1")
-  field_masters   field_masters   @relation(fields: [field_key], references: [field_key], onDelete: Cascade, onUpdate: Restrict, map: "company_field_labels_ibfk_2")
-
-  @@unique([company_id, field_key], map: "company_id")
-  @@index([field_key], map: "field_key")
-}
-
-model field_masters {
-  id                   Int                    @id @default(autoincrement())
-  field_key            String?                @unique(map: "field_key") @db.VarChar(100)
-  default_label        String?                @db.VarChar(255)
-  created_at           DateTime?              @db.Timestamp(0)
-  updated_at           DateTime?              @db.Timestamp(0)
-  company_field_labels company_field_labels[]
-}
-
-model anukampa_records {
-  id                 Int      @id @default(autoincrement())
-  victim_name        String   @db.VarChar(255)
-  contact_number     String   @db.VarChar(15)
-  range              String   @db.VarChar(100)
-  village_name       String   @db.VarChar(255)
-  latitude           Decimal  @db.Decimal(10, 8)
-  longitude          Decimal  @db.Decimal(11, 8)
-  incident_type      String   @db.VarChar(50)
-  animal_responsible String?  @db.VarChar(100)
-  incident_date      DateTime @db.Date
-  estimated_loss     Decimal? @db.Decimal(10, 2)
-  status             String?  @default("Pending") @db.VarChar(50)
-  remarks            String?  @db.Text
-  documents          String?  @db.LongText
-  specific_details   String?  @db.LongText
-  created_at         DateTime @default(now()) @db.Timestamp(0)
-  updated_at         DateTime @default(now()) @db.Timestamp(0)
-}
-
 enum patrol_sessions_type {
   Routine
   Special

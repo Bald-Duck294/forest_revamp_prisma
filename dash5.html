@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Analytics - Multi-Theme</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* =========================================
+           1. LIGHT THEME (Base Variables)
+        ========================================= */
+        :root {
+            --bg-body: #F4F6F9;
+            --bg-card: #FFFFFF;
+            --header-bg: #FFFFFF;
+            --text-main: #2A3547;
+            --text-muted: #7C8FAC;
+            --border-color: #EAEFF4;
+            --table-hover: #F8FAFC;
+            
+            --primary: #165a50;       /* Dark Teal */
+            --secondary: #8bc34a;     /* Standard Green */
+            --warning: #d19c1b;       /* Orange */
+            --danger: #902e1d;        /* Dark Red */
+            --blue: #24699d;          /* Muted Blue */
+            
+            --sidebar-bg: #FFFFFF;
+            --sidebar-active-bg: #165a50;
+            --sidebar-active-text: #FFFFFF;
+            --sidebar-text: #2A3547;
+            
+            --badge-success-bg: rgba(139, 195, 74, 0.15);
+            --badge-success-text: #558b2f;
+            --badge-warning-bg: rgba(209, 156, 27, 0.15);
+            --badge-warning-text: #d19c1b;
+            --badge-danger-bg: rgba(144, 46, 29, 0.15);
+            --badge-danger-text: #902e1d;
+            
+            --chart-grid: #EAEFF4;
+            --input-bg: #FFFFFF;
+        }
+
+        /* =========================================
+           2. DARK THEME 1: EARTHY (Forest & Neon)
+        ========================================= */
+        body.dark-1 {
+            --bg-body: #141a18;       
+            --bg-card: #030e09;       
+            --header-bg: #165a50;     
+            
+            --text-main: #EAEFF4;
+            --text-muted: #87bee0;    
+            --border-color: rgba(25, 91, 79, 0.5);  
+            --table-hover: #0e1410;   
+            
+            --primary: #165a50;       /* Deep Teal */
+            --secondary: #c2fd75;     /* Neon Yellow/Green */
+            --warning: #d19c1b;       
+            --danger: #ff5252;        
+            --blue: #24699d;
+            
+            --sidebar-bg: #030e09;
+            --sidebar-text: #EAEFF4;
+            --sidebar-active-bg: #c2fd75; 
+            --sidebar-active-text: #030e09; 
+            
+            --badge-success-bg: rgba(22, 90, 80, 0.4);
+            --badge-success-text: #c2fd75;
+            --badge-warning-bg: rgba(209, 156, 27, 0.2);
+            --badge-warning-text: #d19c1b;
+            --badge-danger-bg: rgba(255, 82, 82, 0.15);
+            --badge-danger-text: #ff5252;
+            
+            --chart-grid: rgba(25, 91, 79, 0.4);
+            --input-bg: #0e1410;
+        }
+
+        /* =========================================
+           3. DARK THEME 2: SLATE (Classic SaaS)
+        ========================================= */
+        body.dark-2 {
+            --bg-body: #0f172a;       
+            --bg-card: #1e293b;       
+            --header-bg: #1e293b;     
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;    
+            --border-color: #334155;  
+            --table-hover: #0f172a;   
+            
+            --primary: #3b82f6;       /* Bright Blue */
+            --secondary: #10b981;     /* Emerald Green */
+            --warning: #f59e0b;       /* Amber */
+            --danger: #ef4444;        /* Red */
+            --blue: #6366f1;          /* Indigo */
+            
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #cbd5e1;
+            --sidebar-active-bg: rgba(59, 130, 246, 0.15); 
+            --sidebar-active-text: #3b82f6; 
+            
+            --badge-success-bg: rgba(16, 185, 129, 0.15);
+            --badge-success-text: #34d399;
+            --badge-warning-bg: rgba(245, 158, 11, 0.15);
+            --badge-warning-text: #fbbf24;
+            --badge-danger-bg: rgba(239, 68, 68, 0.15);
+            --badge-danger-text: #f87171;
+            
+            --chart-grid: rgba(255, 255, 255, 0.05);
+            --input-bg: #0f172a;
+        }
+
+        /* =========================================
+           4. DARK THEME 3: MIDNIGHT (Neon Purple/Cyan)
+        ========================================= */
+        body.dark-3 {
+            --bg-body: #0a0b10;       
+            --bg-card: #13151f;       
+            --header-bg: #13151f;     
+            
+            --text-main: #ffffff;
+            --text-muted: #8c93a1;    
+            --border-color: #262938;  
+            --table-hover: #1a1d2d;   
+            
+            --primary: #8b5cf6;       /* Neon Purple */
+            --secondary: #2dd4bf;     /* Neon Cyan/Teal */
+            --warning: #fbbf24;       /* Gold */
+            --danger: #f43f5e;        /* Rose/Pink */
+            --blue: #38bdf8;          /* Light Blue */
+            
+            --sidebar-bg: #13151f;
+            --sidebar-text: #a1a1aa;
+            --sidebar-active-bg: rgba(45, 212, 191, 0.1); 
+            --sidebar-active-text: #2dd4bf; 
+            
+            --badge-success-bg: rgba(45, 212, 191, 0.15);
+            --badge-success-text: #2dd4bf;
+            --badge-warning-bg: rgba(251, 191, 36, 0.15);
+            --badge-warning-text: #fbbf24;
+            --badge-danger-bg: rgba(244, 63, 94, 0.15);
+            --badge-danger-text: #f43f5e;
+            
+            --chart-grid: rgba(255, 255, 255, 0.05);
+            --input-bg: #0a0b10;
+        }
+
+        /* === GLOBAL CSS === */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease; }
+        body { background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 1.5rem 1rem; z-index: 10; }
+        .logo { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--text-main); margin-bottom: 2rem; padding-left: 10px; }
+        .logo i { color: var(--secondary); }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: var(--sidebar-text); font-weight: 500; cursor: pointer; margin-bottom: 8px; font-size: 0.95rem; }
+        .nav-item:hover { background: var(--table-hover); }
+        .nav-item.active { background-color: var(--sidebar-active-bg); color: var(--sidebar-active-text); }
+        .nav-item.active i { color: var(--sidebar-active-text); }
+
+        /* Main Layout & Header */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .header { height: 70px; background-color: var(--header-bg); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; position: sticky; top: 0; z-index: 5; border-bottom: 1px solid var(--border-color); }
+        .header-title { font-size: 1.2rem; font-weight: 600; color: var(--text-main); }
+        body.dark-1 .header-title { color: #FFFFFF; } /* Keep Dark-1 header text white */
+        
+        .header-actions { display: flex; align-items: center; gap: 1.5rem; }
+        .icon-btn { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
+        .icon-btn:hover { color: var(--secondary); }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; color: var(--text-main); }
+        body.dark-1 .user-profile span { color: #FFFFFF; } /* Keep Dark-1 header text white */
+        .avatar { width: 35px; height: 35px; border-radius: 50%; background-image: url('https://i.pravatar.cc/100?img=11'); background-size: cover; border: 2px solid var(--secondary); }
+
+        /* Theme Selector Dropdown */
+        .theme-selector {
+            background: var(--input-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* View Containers */
+        .view-section { display: none; padding: 2rem; max-width: 1400px; width: 100%; margin: 0 auto; }
+        .view-section.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Cards & Buttons */
+        .card { background: var(--bg-card); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border-color); margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        
+        .btn { padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-warning { background: var(--warning); color: #000; }
+        .btn-outline { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); }
+        .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+        /* Form Elements */
+        .filter-bar { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-group label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+        select, input[type="date"] { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); outline: none; font-size: 0.9rem; min-width: 150px; }
+        
+        /* KPI Boxes */
+        .kpi-grid { display: flex; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .kpi-box { background: var(--bg-card); border-radius: 12px; padding: 1.25rem 1.5rem; flex: 1; min-width: 200px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 1rem; }
+        .kpi-icon { width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .kpi-info h4 { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+        .kpi-info h2 { font-size: 1.5rem; color: var(--text-main); }
+
+        /* Table Styling */
+        .table-container { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th { text-align: left; padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color); cursor: pointer; user-select: none; transition: background 0.2s; }
+        th:hover { background-color: var(--table-hover); color: var(--text-main); }
+        th i { margin-left: 5px; font-size: 0.75rem; opacity: 0.5; }
+        
+        td { padding: 1rem; border-bottom: 1px dashed var(--border-color); font-size: 0.9rem; font-weight: 500; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: var(--table-hover); }
+        
+        .user-cell { display: flex; align-items: center; gap: 12px; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 10px; background-color: var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-muted); overflow: hidden; }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-name { font-weight: 600; color: var(--text-main); display: block; }
+        .sub-text { font-size: 0.75rem; color: var(--text-muted); font-weight: 400; display: block; margin-top: 2px; }
+        
+        /* Badges & Links */
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+        .badge-success { background: var(--badge-success-bg); color: var(--badge-success-text); }
+        .badge-warning { background: var(--badge-warning-bg); color: var(--badge-warning-text); }
+        .badge-danger { background: var(--badge-danger-bg); color: var(--badge-danger-text); }
+        
+        .action-link { color: var(--blue); text-decoration: none; font-weight: 600; font-size: 0.85rem; }
+        .action-link:hover { text-decoration: underline; color: var(--secondary); }
+
+        /* Charts */
+        .chart-row { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+        @media(max-width: 900px) { .chart-row { grid-template-columns: 1fr; } }
+        .chart-wrapper { position: relative; height: 300px; width: 100%; margin-top: 1rem; }
+        
+    </style>
+</head>
+<body class="dark-1"> <aside class="sidebar">
+        <div class="logo"><i class="fa-solid fa-shield-halved"></i> PatrolOS</div>
+        <div class="nav-item active" onclick="switchTab('overview', this)">
+            <i class="fa-solid fa-chart-pie"></i> Attendance Overview
+        </div>
+        <div class="nav-item" onclick="switchTab('logs', this)">
+            <i class="fa-solid fa-list-check"></i> Attendance Logs
+        </div>
+    </aside>
+
+    <div class="main-wrapper">
+        
+        <header class="header">
+            <div class="header-title">Patrol Analytics</div>
+            <div class="header-actions">
+                
+                <select id="theme-select" class="theme-selector" onchange="changeTheme(this.value)">
+                    <option value="light">☀️ Light Theme</option>
+                    <option value="dark-1" selected>🌙 Dark 1 (Earth)</option>
+                    <option value="dark-2">🌙 Dark 2 (Slate)</option>
+                    <option value="dark-3">🌙 Dark 3 (Midnight)</option>
+                </select>
+
+                <button class="icon-btn"><i class="fa-regular fa-bell"></i></button>
+                <div class="user-profile">
+                    <div class="avatar"></div>
+                    <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                        <span style="font-weight: 600; font-size: 0.9rem;">Anil SupreAdmin</span>
+                        <span style="font-size: 0.75rem; opacity: 0.8;">Superadmin</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="view-overview" class="view-section active">
+            
+            <div class="flex-between" style="margin-bottom: 1.5rem;">
+                <div class="kpi-grid" style="margin-bottom: 0;">
+                    <div class="kpi-box">
+                        <div class="kpi-icon badge-success"><i class="fa-solid fa-user-check"></i></div>
+                        <div class="kpi-info"><h4>Present</h4><h2>152</h2></div>
+                    </div>
+                    <div class="kpi-box">
+                        <div class="kpi-icon badge-warning"><i class="fa-regular fa-clock"></i></div>
+                        <div class="kpi-info"><h4>Late</h4><h2>12</h2></div>
+                    </div>
+                    <div class="kpi-box">
+                        <div class="kpi-icon" style="background: rgba(36,105,157,0.1); color: var(--blue);"><i class="fa-solid fa-file-invoice"></i></div>
+                        <div class="kpi-info"><h4>Requests</h4><h2>5</h2></div>
+                    </div>
+                    <div class="kpi-box">
+                        <div class="kpi-icon badge-danger"><i class="fa-solid fa-building"></i></div>
+                        <div class="kpi-info"><h4>Absent</h4><h2>3</h2></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-between" style="margin-bottom: 1.5rem;">
+                <div></div> <div style="display: flex; gap: 10px;">
+                    <input type="date" class="btn-outline">
+                    <button class="btn btn-outline"><i class="fa-regular fa-calendar"></i> Filter Date</button>
+                    <button class="btn btn-warning"><i class="fa-solid fa-download"></i> Export Data</button>
+                </div>
+            </div>
+
+            <div class="chart-row">
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="flex-between">
+                        <div>
+                            <h3 style="font-size: 1.1rem; font-weight: 600;">Weekly Attendance Trends</h3>
+                            <p style="font-size: 0.8rem; color: var(--text-muted);">Comparing last 7 days of site activity</p>
+                        </div>
+                        <select>
+                            <option>Total Attendance</option>
+                            <option>Site A Only</option>
+                        </select>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 0;">
+                    <h3 style="font-size: 1.1rem; font-weight: 600; text-align: center; margin-bottom: 1rem;">Status Distribution</h3>
+                    <div class="chart-wrapper" style="height: 200px;">
+                        <canvas id="donutChart"></canvas>
+                    </div>
+                    <div style="margin-top: 1.5rem; font-size: 0.85rem; padding: 0 10px;">
+                        <div class="flex-between" style="margin-bottom: 8px;">
+                            <span><i class="fa-solid fa-circle" style="color: var(--primary); font-size: 0.7rem; margin-right: 5px;"></i> Present</span>
+                            <strong style="color: var(--text-main);">152</strong>
+                        </div>
+                        <div class="flex-between" style="margin-bottom: 8px;">
+                            <span><i class="fa-solid fa-circle" style="color: var(--secondary); font-size: 0.7rem; margin-right: 5px;"></i> Late</span>
+                            <strong style="color: var(--text-main);">12</strong>
+                        </div>
+                        <div class="flex-between">
+                            <span><i class="fa-solid fa-circle" style="color: var(--danger); font-size: 0.7rem; margin-right: 5px;"></i> Absent</span>
+                            <strong style="color: var(--text-main);">3</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">Recent Check-ins</h3>
+                <div class="table-container">
+                    <table id="recentTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('recentTable', 0)">User <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('recentTable', 1)">Time <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('recentTable', 2)">Site <i class="fa-solid fa-sort"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><div class="user-cell"><div class="user-avatar"><i class="fa-solid fa-user"></i></div><span class="user-name">Ramesh Singh</span></div></td>
+                                <td>09:02 AM</td>
+                                <td>North Zone</td>
+                            </tr>
+                            <tr>
+                                <td><div class="user-cell"><div class="user-avatar"><i class="fa-solid fa-user"></i></div><span class="user-name">Amit Kumar</span></div></td>
+                                <td>09:15 AM</td>
+                                <td>South Gate</td>
+                            </tr>
+                            <tr>
+                                <td><div class="user-cell"><div class="user-avatar"><i class="fa-solid fa-user"></i></div><span class="user-name">Suresh Patel</span></div></td>
+                                <td>08:55 AM</td>
+                                <td>East Wing</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-logs" class="view-section">
+            
+            <div class="card">
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label>Date Range</label>
+                        <select><option>Last 30 Days</option><option>This Week</option></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Employee</label>
+                        <select><option>All Employees</option></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Site</label>
+                        <select><option>All Sites</option></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Client</label>
+                        <select><option>All Clients</option></select>
+                    </div>
+                    <div class="filter-group" style="justify-content: flex-end;">
+                        <button class="btn btn-primary" style="height: 35px; padding: 0 20px;">Apply</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-box">
+                    <div class="kpi-icon badge-success"><i class="fa-regular fa-circle-check"></i></div>
+                    <div class="kpi-info"><h4>On-time Completion</h4><h2>60%</h2></div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-icon badge-warning"><i class="fa-regular fa-clock"></i></div>
+                    <div class="kpi-info"><h4>Avg Lateness</h4><h2>12m</h2></div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-icon badge-danger"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="kpi-info"><h4>Unresolved Incidents</h4><h2>0</h2></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="table-container">
+                    <table id="logsTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('logsTable', 0)">Employee Name <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('logsTable', 1)">Site Name <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('logsTable', 2)">Entry Time <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('logsTable', 3)">Exit Time <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('logsTable', 4)">Duration <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('logsTable', 5)">Status <i class="fa-solid fa-sort"></i></th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="user-avatar"><img src="https://i.pravatar.cc/150?img=33" alt="Guard 1"></div>
+                                        <div><span class="user-name">Guard 1</span><span class="sub-text">Client A</span></div>
+                                    </div>
+                                </td>
+                                <td><div><span class="user-name">Site A</span><span class="sub-text">Zone 1</span></div></td>
+                                <td>09:00:00</td>
+                                <td>17:00:00</td>
+                                <td>8h 00m</td>
+                                <td><span class="badge badge-success">On-time</span></td>
+                                <td><a href="#" class="action-link">View Details</a></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="user-avatar"><img src="https://i.pravatar.cc/150?img=12" alt="Guard 2"></div>
+                                        <div><span class="user-name">Guard 2</span><span class="sub-text">Client A</span></div>
+                                    </div>
+                                </td>
+                                <td><div><span class="user-name">Site A</span><span class="sub-text">Zone 1</span></div></td>
+                                <td>09:05:00</td>
+                                <td>17:00:00</td>
+                                <td>7h 55m</td>
+                                <td><span class="badge badge-warning">Late (5m)</span></td>
+                                <td><a href="#" class="action-link">View Details</a></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="user-avatar"><img src="https://i.pravatar.cc/150?img=59" alt="Guard 3"></div>
+                                        <div><span class="user-name">Guard 3</span><span class="sub-text">Client B</span></div>
+                                    </div>
+                                </td>
+                                <td><div><span class="user-name">Site B</span><span class="sub-text">Zone 2</span></div></td>
+                                <td>08:55:00</td>
+                                <td>17:10:00</td>
+                                <td>8h 15m</td>
+                                <td><span class="badge badge-success">On-time</span></td>
+                                <td><a href="#" class="action-link">View Details</a></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="user-avatar"><img src="https://i.pravatar.cc/150?img=68" alt="Guard 4"></div>
+                                        <div><span class="user-name">Guard 4</span><span class="sub-text">Client B</span></div>
+                                    </div>
+                                </td>
+                                <td><div><span class="user-name">Site B</span><span class="sub-text">Zone 2</span></div></td>
+                                <td>09:10:00</td>
+                                <td>17:00:00</td>
+                                <td>7h 50m</td>
+                                <td><span class="badge badge-warning">Late (10m)</span></td>
+                                <td><a href="#" class="action-link">View Details</a></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="user-avatar"><img src="https://i.pravatar.cc/150?img=11" alt="Guard 5"></div>
+                                        <div><span class="user-name">Guard 5</span><span class="sub-text">Client C</span></div>
+                                    </div>
+                                </td>
+                                <td><div><span class="user-name">Site C</span><span class="sub-text">Zone 3</span></div></td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td><span class="badge badge-danger">Absent</span></td>
+                                <td><a href="#" class="action-link">View Details</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 1. Tab Switching
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + tabId).classList.add('active');
+        }
+
+        let barChart, donutChart;
+
+        // 2. THEME SWITCHER LOGIC
+        function changeTheme(themeValue) {
+            // Remove existing theme classes
+            document.body.classList.remove('light', 'dark-1', 'dark-2', 'dark-3');
+            
+            // Add new theme class (if not light, since light is the default :root)
+            if (themeValue !== 'light') {
+                document.body.classList.add(themeValue);
+            }
+            
+            // Re-render charts to grab the new CSS variables mapped to the theme
+            renderCharts();
+        }
+
+        // 3. Dynamic Chart Rendering
+        function renderCharts() {
+            const rootStyle = getComputedStyle(document.body);
+            const textColor = rootStyle.getPropertyValue('--text-muted').trim();
+            const gridColor = rootStyle.getPropertyValue('--chart-grid').trim();
+            
+            // Fetch dynamically updated colors based on active theme
+            const primaryColor = rootStyle.getPropertyValue('--primary').trim();   
+            const secondaryColor = rootStyle.getPropertyValue('--secondary').trim(); 
+            const dangerColor = rootStyle.getPropertyValue('--danger').trim();     
+
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = textColor;
+
+            if(barChart) barChart.destroy();
+            if(donutChart) donutChart.destroy();
+
+            // A. Stacked Bar Chart
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            barChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['11 Mar', '12 Mar', '13 Mar', '14 Mar', '15 Mar', '16 Mar', '17 Mar'],
+                    datasets: [
+                        {
+                            label: 'Present',
+                            data: [140, 150, 130, 145, 155, 148, 152],
+                            backgroundColor: primaryColor, 
+                            borderRadius: 6,
+                            borderSkipped: false,
+                            barPercentage: 0.6
+                        },
+                        {
+                            label: 'Late/Absent',
+                            data: [20, 10, 30, 15, 5, 12, 15],
+                            backgroundColor: secondaryColor, 
+                            borderRadius: 6,
+                            borderSkipped: false,
+                            barPercentage: 0.6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } } 
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } }, 
+                        y: { 
+                            stacked: true,
+                            grid: { color: gridColor, drawBorder: false }
+                        }
+                    }
+                }
+            });
+
+            // B. Donut Chart
+            const ctxDonut = document.getElementById('donutChart').getContext('2d');
+            donutChart = new Chart(ctxDonut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Present', 'Late', 'Absent'],
+                    datasets: [{
+                        data: [152, 12, 3],
+                        backgroundColor: [primaryColor, secondaryColor, dangerColor],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%', 
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // 4. Table Sorting Logic
+        function sortTable(tableId, n) {
+            let table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.getElementById(tableId);
+            switching = true;
+            dir = "asc"; 
+            
+            let headers = table.getElementsByTagName("TH");
+            for(let th of headers) {
+                let icon = th.querySelector('i');
+                if(icon) icon.className = 'fa-solid fa-sort';
+            }
+
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+                
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    
+                    let xContent = x.innerText.toLowerCase().trim();
+                    let yContent = y.innerText.toLowerCase().trim();
+
+                    if (dir == "asc") {
+                        if (xContent > yContent) { shouldSwitch = true; break; }
+                    } else if (dir == "desc") {
+                        if (xContent < yContent) { shouldSwitch = true; break; }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+            
+            let clickedIcon = headers[n].querySelector('i');
+            if(clickedIcon) {
+                clickedIcon.className = dir === 'asc' ? 'fa-solid fa-sort-up' : 'fa-solid fa-sort-down';
+            }
+        }
+
+        window.onload = renderCharts;
+    </script>
+</body>
+</html>
