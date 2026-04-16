@@ -1,0 +1,1672 @@
+<!-- <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plantation UI Revamp</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      /* === THEME VARIABLES === */
+      :root {
+        /* Light Theme (NiceDash Inspired) */
+        --bg-body: #f4f6f9;
+        --bg-card: #ffffff;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --table-hover: #f8fafc;
+
+        /* Accents & Brand */
+        --primary: #10b981; /* NiceDash Green */
+        --primary-light: #d1fae5;
+        --blue: #3b82f6; /* Blue from graph reference */
+        --blue-light: #dbeafe;
+        --yellow: #f59e0b;
+        --yellow-light: #fef3c7;
+        --red: #ef4444;
+
+        /* Sidebar active state */
+        --sidebar-active-bg: var(--primary);
+        --sidebar-active-text: #ffffff;
+      }
+
+      /* Dark Theme Override (Exact match to NiceDash Dark) */
+      body.dark-mode {
+        --bg-body: #0b0f19; /* Deep dark navy background */
+        --bg-card: #131a28; /* Slightly lighter card background */
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --border-color: #1e293b;
+        --table-hover: #1a2233;
+
+        --sidebar-active-bg: rgba(16, 185, 129, 0.15);
+        --sidebar-active-text: #10b981;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+        transition:
+          background-color 0.3s ease,
+          border-color 0.3s ease,
+          color 0.15s ease;
+      }
+
+      body {
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* === SIDEBAR === */
+      .sidebar {
+        width: 260px;
+        background-color: var(--bg-card);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem 1rem;
+        z-index: 10;
+      }
+
+      .logo {
+        font-size: 1.25rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text-main);
+        margin-bottom: 2rem;
+        padding-left: 10px;
+      }
+      .logo i {
+        color: var(--primary);
+        font-size: 1.5rem;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        color: var(--text-muted);
+        font-weight: 500;
+        cursor: pointer;
+        margin-bottom: 8px;
+      }
+
+      .nav-item:hover {
+        color: var(--text-main);
+        background: var(--table-hover);
+      }
+
+      .nav-item.active {
+        background-color: var(--sidebar-active-bg);
+        color: var(--sidebar-active-text);
+      }
+
+      /* === MAIN LAYOUT === */
+      .main-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      /* === HEADER === */
+      .header {
+        height: 70px;
+        background-color: var(--bg-card);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 2rem;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+
+      .header-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+      }
+
+      .icon-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.2rem;
+        cursor: pointer;
+      }
+      .icon-btn:hover {
+        color: var(--text-main);
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: var(--primary);
+        background-image: url("https://i.pravatar.cc/100?img=11");
+        background-size: cover;
+      }
+
+      /* === VIEW CONTAINERS === */
+      .view-section {
+        display: none; /* Hidden by default */
+        padding: 2rem;
+        max-width: 1400px;
+        width: 100%;
+        margin: 0 auto;
+      }
+      .view-section.active {
+        display: block;
+      }
+
+      /* === CARDS & GRIDS === */
+      .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+      }
+
+      .flex-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      /* Buttons */
+      .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-blue {
+        background: #0ea5e9;
+        color: white;
+      }
+      .btn-yellow {
+        background: var(--yellow);
+        color: white;
+      }
+      .btn-outline {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+      }
+      .btn-workflow {
+        background: var(--primary);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+      }
+
+      /* Badges */
+      .badge {
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .badge-light {
+        background: var(--bg-body);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+      }
+      .badge-blue {
+        background: var(--blue-light);
+        color: var(--blue);
+      }
+      .badge-primary {
+        background: var(--primary);
+        color: white;
+      }
+
+      /* Tables */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+      }
+      th {
+        text-align: left;
+        padding: 1rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-color);
+      }
+      td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover {
+        background-color: var(--table-hover);
+      }
+
+      /* -------------------------------------
+           VIEW 1: DASHBOARD SPECIFIC STYLES
+        -------------------------------------- */
+      .dash-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        gap: 1.5rem;
+      }
+      .kpi-container {
+        display: flex;
+        gap: 1.5rem;
+        flex: 1;
+      }
+      .kpi-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem;
+        flex: 1;
+      }
+      .kpi-title {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+      }
+      .kpi-val {
+        font-size: 1.8rem;
+        font-weight: 700;
+      }
+
+      /* -------------------------------------
+           VIEW 2: ANALYTICS SPECIFIC STYLES
+        -------------------------------------- */
+      .analytics-top-grid {
+        display: grid;
+        grid-template-columns: 65% 33%;
+        gap: 2%;
+        margin-bottom: 1.5rem;
+      }
+      .analytics-bottom-grid {
+        display: grid;
+        grid-template-columns: 33% 65%;
+        gap: 2%;
+      }
+
+      /* Graph Container Fix (Prevents scaling bugs) */
+      .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+        margin-top: 1rem;
+      }
+      .chart-container-donut {
+        position: relative;
+        height: 250px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+
+      /* Progress Bars */
+      .progress-group {
+        margin-bottom: 1.25rem;
+      }
+      .progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        margin-bottom: 0.4rem;
+        font-weight: 500;
+      }
+      .progress-track {
+        width: 100%;
+        height: 10px;
+        background: var(--border-color);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="logo"><i class="fa-solid fa-leaf"></i> NiceDash</div>
+
+      <div class="nav-item active" onclick="switchTab('dashboard', this)">
+        <i class="fa-solid fa-table-list"></i> Plantation Dashboard
+      </div>
+      <div class="nav-item" onclick="switchTab('analytics', this)">
+        <i class="fa-solid fa-chart-line"></i> Plantation Analytics
+      </div>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="header">
+        <div class="header-title">Patrol Analytics</div>
+        <div class="header-actions">
+          <button class="icon-btn" onclick="toggleTheme()" id="theme-toggle">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <button class="icon-btn"><i class="fa-regular fa-bell"></i></button>
+          <div class="user-profile">
+            <div class="avatar"></div>
+            <div
+              style="display: flex; flex-direction: column; line-height: 1.2"
+            >
+              <span>Anil supreAdmin</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted)"
+                >Superadmin</span
+              >
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div id="view-dashboard" class="view-section active">
+        <div class="dash-top-row">
+          <div class="kpi-container">
+            <div class="kpi-box">
+              <div class="kpi-title">Total Plantations</div>
+              <div class="kpi-val">3</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-title">Active</div>
+              <div class="kpi-val" style="color: var(--blue)">3</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-title">Completed</div>
+              <div class="kpi-val" style="color: var(--primary)">0</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-title">Pending</div>
+              <div class="kpi-val" style="color: var(--yellow)">0</div>
+            </div>
+          </div>
+          <button class="btn btn-blue">+ Add Plantation</button>
+        </div>
+
+        <div class="card">
+          <h3
+            style="
+              font-size: 1rem;
+              color: var(--text-muted);
+              margin-bottom: 1rem;
+              font-weight: 600;
+            "
+          >
+            Plantation List
+          </h3>
+          <div style="overflow-x: auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Name</th>
+                  <th>Site</th>
+                  <th>Phase</th>
+                  <th>Status</th>
+                  <th style="text-align: right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="color: var(--blue)">PLT003</td>
+                  <td>Kartik Kanzode</td>
+                  <td><span class="badge badge-light">demo site 1</span></td>
+                  <td><span class="badge badge-blue">Identification</span></td>
+                  <td><span class="badge badge-primary">Active</span></td>
+                  <td style="text-align: right">
+                    <button class="btn-workflow">Workflow &rarr;</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="color: var(--blue)">PLT002</td>
+                  <td>dfhusdn 2</td>
+                  <td><span class="badge badge-light">demo site 1</span></td>
+                  <td><span class="badge badge-blue">Identification</span></td>
+                  <td><span class="badge badge-primary">Active</span></td>
+                  <td style="text-align: right">
+                    <button class="btn-workflow">Workflow &rarr;</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="color: var(--blue)">PLT001</td>
+                  <td>Plantation 1</td>
+                  <td><span class="badge badge-light">demo site 1</span></td>
+                  <td><span class="badge badge-blue">Observation</span></td>
+                  <td><span class="badge badge-primary">Active</span></td>
+                  <td style="text-align: right">
+                    <button class="btn-workflow">Workflow &rarr;</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-analytics" class="view-section">
+        <div class="flex-between" style="margin-bottom: 1.5rem">
+          <div>
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 4px">
+              Plantation Analytics
+            </h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem">
+              Real-time monitoring of crop performance and resource
+              distribution.
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px">
+            <button class="btn btn-outline">
+              <i class="fa-regular fa-calendar"></i> Last 6 Months
+            </button>
+            <button class="btn btn-yellow">
+              <i class="fa-solid fa-download"></i> Export Report
+            </button>
+          </div>
+        </div>
+
+        <div class="analytics-top-grid">
+          <div class="card">
+            <div class="flex-between">
+              <div>
+                <h3 style="font-size: 1.1rem">Yield Forecast vs Actual</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted)">
+                  Comparison of projected growth vs measured output
+                </p>
+              </div>
+              <div style="text-align: right">
+                <div
+                  style="
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: var(--yellow);
+                  "
+                >
+                  420 Tons
+                </div>
+                <div style="font-size: 0.8rem; color: var(--primary)">
+                  +12.5% vs target
+                </div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="yieldChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3
+              style="font-size: 1.1rem; text-align: center; margin-bottom: 1rem"
+            >
+              Crop Health Distribution
+            </h3>
+            <div class="chart-container-donut">
+              <canvas id="healthChart"></canvas>
+            </div>
+            <div style="margin-top: 1rem; font-size: 0.85rem; padding: 0 10px">
+              <div class="flex-between" style="margin-bottom: 6px">
+                <span
+                  ><i
+                    class="fa-solid fa-square"
+                    style="color: var(--primary)"
+                  ></i>
+                  Optimal</span
+                >
+                <strong>75%</strong>
+              </div>
+              <div class="flex-between" style="margin-bottom: 6px">
+                <span
+                  ><i
+                    class="fa-solid fa-square"
+                    style="color: var(--yellow)"
+                  ></i>
+                  Action Required</span
+                >
+                <strong>15%</strong>
+              </div>
+              <div class="flex-between">
+                <span
+                  ><i class="fa-solid fa-square" style="color: var(--red)"></i>
+                  Critical</span
+                >
+                <strong>10%</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="analytics-bottom-grid">
+          <div class="card">
+            <h3 style="font-size: 1.1rem; margin-bottom: 1.5rem">
+              Resource Utilization
+            </h3>
+
+            <div class="progress-group">
+              <div class="progress-label">
+                <span>Water Irrigation</span> <span>72%</span>
+              </div>
+              <div class="progress-track">
+                <div
+                  class="progress-fill"
+                  style="width: 72%; background: var(--text-muted)"
+                ></div>
+              </div>
+            </div>
+            <div class="progress-group">
+              <div class="progress-label">
+                <span>Fertilizer Stock</span> <span>66%</span>
+              </div>
+              <div class="progress-track">
+                <div
+                  class="progress-fill"
+                  style="width: 66%; background: var(--primary)"
+                ></div>
+              </div>
+            </div>
+            <div class="progress-group" style="margin-bottom: 0">
+              <div class="progress-label">
+                <span>Labor Efficiency</span> <span>94%</span>
+              </div>
+              <div class="progress-track">
+                <div
+                  class="progress-fill"
+                  style="width: 94%; background: var(--yellow)"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="flex-between" style="margin-bottom: 1rem">
+              <h3 style="font-size: 1.1rem">Top Performing Plantations</h3>
+              <a
+                href="#"
+                style="
+                  color: var(--yellow);
+                  font-size: 0.9rem;
+                  text-decoration: none;
+                  font-weight: 500;
+                "
+                >View All</a
+              >
+            </div>
+            <div style="overflow-x: auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Plantation</th>
+                    <th>Crop</th>
+                    <th>Efficiency</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Plantation 1</td>
+                    <td>Neem</td>
+                    <td style="color: var(--primary)">1</td>
+                    <td><span class="badge badge-primary">Active</span></td>
+                  </tr>
+                  <tr>
+                    <td>dfhusdn 2</td>
+                    <td>N/A</td>
+                    <td style="color: var(--primary)">0</td>
+                    <td><span class="badge badge-primary">Active</span></td>
+                  </tr>
+                  <tr>
+                    <td>Kartik Kanzode</td>
+                    <td>N/A</td>
+                    <td style="color: var(--primary)">0</td>
+                    <td><span class="badge badge-primary">Active</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- 1. TAB SWITCHING LOGIC ---
+      function switchTab(tabId, element) {
+        // Update sidebar active class
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((el) => el.classList.remove("active"));
+        element.classList.add("active");
+
+        // Update visible view
+        document
+          .querySelectorAll(".view-section")
+          .forEach((el) => el.classList.remove("active"));
+        document.getElementById("view-" + tabId).classList.add("active");
+      }
+
+      // --- 2. THEME TOGGLE LOGIC ---
+      function toggleTheme() {
+        document.body.classList.toggle("dark-mode");
+        const toggleIcon = document
+          .getElementById("theme-toggle")
+          .querySelector("i");
+
+        if (document.body.classList.contains("dark-mode")) {
+          toggleIcon.classList.remove("fa-moon");
+          toggleIcon.classList.add("fa-sun");
+          Chart.defaults.color = "#94A3B8"; // Muted text for dark mode
+          Chart.defaults.borderColor = "#1E293B"; // Dark grid lines
+        } else {
+          toggleIcon.classList.remove("fa-sun");
+          toggleIcon.classList.add("fa-moon");
+          Chart.defaults.color = "#64748B"; // Muted text for light mode
+          Chart.defaults.borderColor = "#E2E8F0"; // Light grid lines
+        }
+
+        yieldChartInstance.update();
+        healthChartInstance.update();
+      }
+
+      // --- 3. CHART.JS INITIALIZATION ---
+      // Global defaults matching UI fonts
+      Chart.defaults.font.family = "'Inter', sans-serif";
+      Chart.defaults.color = "#64748B";
+      Chart.defaults.borderColor = "#E2E8F0";
+
+      // A. Line Chart (Yield Forecast)
+      // Note: Using the bright blue from your reference images
+      const ctxYield = document.getElementById("yieldChart").getContext("2d");
+      const yieldChartInstance = new Chart(ctxYield, {
+        type: "line",
+        data: {
+          labels: [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+          ],
+          datasets: [
+            {
+              label: "Observations",
+              data: [
+                0.96, 0.98, 1.02, 1.05, 1.04, 1.01, 1.03, 1.06, 1.02, 1.05,
+                1.07, 1.08,
+              ],
+              borderColor: "#3B82F6", // Blue from reference image
+              backgroundColor: "rgba(59, 130, 246, 0.1)",
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4, // Smooth curve
+              pointRadius: 0,
+              pointHoverRadius: 6,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false, // CRITICAL: Fixes the infinite scaling issue
+          plugins: {
+            legend: { display: false },
+          },
+          scales: {
+            y: { min: 0.94, max: 1.08 },
+          },
+        },
+      });
+
+      // B. Donut Chart (Crop Health)
+      // Note: Exact colors matching your original screenshot
+      const ctxHealth = document.getElementById("healthChart").getContext("2d");
+      const healthChartInstance = new Chart(ctxHealth, {
+        type: "doughnut",
+        data: {
+          labels: ["Optimal", "Action Required", "Critical"],
+          datasets: [
+            {
+              data: [75, 15, 10],
+              backgroundColor: [
+                "#10B981", // Green
+                "#F59E0B", // Yellow
+                "#EF4444", // Red
+              ],
+              borderWidth: 0,
+              hoverOffset: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false, // CRITICAL: Fixes scaling
+          cutout: "70%",
+          plugins: {
+            legend: { display: false }, // Custom HTML legend below it
+          },
+        },
+      });
+    </script>
+  </body>
+</html> -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NiceDash - Plantation UI</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      /* === NICEDASH EXACT THEME VARIABLES === */
+      :root {
+        /* Light Theme */
+        --bg-body: #f4f6f9;
+        --bg-card: #ffffff;
+        --text-main: #2a3547;
+        --text-muted: #7c8fac;
+        --border-color: #eaeff4;
+        --table-hover: #f8fafc;
+
+        /* NiceDash Accents */
+        --primary: #13deb9; /* Signature Teal/Green */
+        --primary-hover: #0cb898;
+        --secondary: #5d87ff; /* Blue */
+        --warning: #ffae1f; /* Yellow */
+        --danger: #fa896b; /* Red */
+
+        /* Sidebar */
+        --sidebar-bg: #ffffff;
+        --sidebar-active-bg: #13deb9;
+        --sidebar-active-text: #ffffff;
+        --sidebar-text: #2a3547;
+
+        /* Chart Grids */
+        --chart-grid: #eaeff4;
+      }
+
+      /* Dark Theme Override */
+      body.dark-mode {
+        --bg-body: #111418; /* Deep slate/black */
+        --bg-card: #1a2027; /* Slightly lighter elevated card */
+        --text-main: #eaeff4;
+        --text-muted: #7c8fac;
+        --border-color: #2a3447;
+        --table-hover: #202936;
+
+        --sidebar-bg: #1a2027;
+        --sidebar-text: #eaeff4;
+
+        --chart-grid: rgba(255, 255, 255, 0.05);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+        transition:
+          background-color 0.3s ease,
+          border-color 0.3s ease,
+          color 0.2s ease;
+      }
+
+      body {
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* === SIDEBAR === */
+      .sidebar {
+        width: 260px;
+        background-color: var(--sidebar-bg);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem 1rem;
+        z-index: 10;
+      }
+
+      .logo {
+        font-size: 1.4rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text-main);
+        margin-bottom: 2rem;
+        padding-left: 10px;
+      }
+      .logo i {
+        color: var(--primary);
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        color: var(--sidebar-text);
+        font-weight: 500;
+        cursor: pointer;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+      }
+      .nav-item:hover {
+        background: var(--table-hover);
+      }
+      .nav-item.active {
+        background-color: var(--sidebar-active-bg);
+        color: var(--sidebar-active-text);
+      }
+      .nav-item.active i {
+        color: var(--sidebar-active-text);
+      }
+
+      /* === MAIN LAYOUT === */
+      .main-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      /* === HEADER === */
+      .header {
+        height: 70px;
+        background-color: var(--bg-body);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 2rem;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+
+      .header-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+      }
+      .icon-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.2rem;
+        cursor: pointer;
+      }
+      .icon-btn:hover {
+        color: var(--text-main);
+      }
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background-image: url("https://i.pravatar.cc/100?img=11");
+        background-size: cover;
+      }
+
+      /* === VIEW CONTAINERS === */
+      .view-section {
+        display: none;
+        padding: 2rem;
+        max-width: 1400px;
+        width: 100%;
+        margin: 0 auto;
+      }
+      .view-section.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* === CARDS === */
+      .card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        border: 1px solid var(--border-color);
+      }
+      .flex-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      /* Buttons */
+      .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+      }
+      .btn-primary:hover {
+        background: var(--primary-hover);
+      }
+      .btn-secondary {
+        background: var(--secondary);
+        color: white;
+      }
+      .btn-warning {
+        background: var(--warning);
+        color: white;
+      }
+      .btn-outline {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+      }
+
+      .btn-workflow {
+        background: rgba(19, 222, 185, 0.1);
+        color: var(--primary);
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border: 1px solid transparent;
+        transition: 0.2s;
+      }
+      .btn-workflow:hover {
+        background: var(--primary);
+        color: white;
+      }
+
+      /* Badges (NiceDash Style) */
+      .badge {
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .badge-light {
+        background: var(--table-hover);
+        color: var(--text-muted);
+      }
+      .badge-primary {
+        background: rgba(19, 222, 185, 0.15);
+        color: var(--primary);
+      }
+      .badge-secondary {
+        background: rgba(93, 135, 255, 0.15);
+        color: var(--secondary);
+      }
+
+      /* Tables (NiceDash Style - Very clean, no side borders) */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+      }
+      th {
+        text-align: left;
+        padding: 1rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-color);
+      }
+      td {
+        padding: 1rem;
+        border-bottom: 1px dashed var(--border-color);
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover {
+        background-color: var(--table-hover);
+      }
+
+      /* --- DASHBOARD VIEW --- */
+      .kpi-container {
+        display: flex;
+        gap: 1.5rem;
+        flex: 1;
+        margin-bottom: 1.5rem;
+      }
+      .kpi-box {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 1.5rem;
+        flex: 1;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+      }
+      .kpi-title {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+      .kpi-val {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-main);
+      }
+
+      /* --- ANALYTICS VIEW --- */
+      .analytics-top-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .analytics-bottom-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 1.5rem;
+      }
+
+      /* Fixed Chart Containers */
+      .chart-container {
+        position: relative;
+        height: 280px;
+        width: 100%;
+        margin-top: 1rem;
+      }
+      .chart-container-donut {
+        position: relative;
+        height: 230px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+
+      /* Progress Bars */
+      .progress-group {
+        margin-bottom: 1.25rem;
+      }
+      .progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+      .progress-track {
+        width: 100%;
+        height: 6px;
+        background: var(--table-hover);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body class="dark-mode">
+    <aside class="sidebar">
+      <div class="logo"><i class="fa-solid fa-leaf"></i> NiceDash</div>
+      <div class="nav-item active" onclick="switchTab('dashboard', this)">
+        <i class="fa-solid fa-table-cells-large"></i> Plantation Dashboard
+      </div>
+      <div class="nav-item" onclick="switchTab('analytics', this)">
+        <i class="fa-solid fa-chart-line"></i> Plantation Analytics
+      </div>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="header">
+        <div class="header-title">Patrol Analytics</div>
+        <div class="header-actions">
+          <button class="icon-btn" onclick="toggleTheme()" id="theme-toggle">
+            <i class="fa-solid fa-sun"></i>
+          </button>
+          <button class="icon-btn"><i class="fa-regular fa-bell"></i></button>
+          <div class="user-profile">
+            <div class="avatar"></div>
+            <div
+              style="display: flex; flex-direction: column; line-height: 1.2"
+            >
+              <span style="font-weight: 600; font-size: 0.9rem"
+                >Anil SupreAdmin</span
+              >
+              <span style="font-size: 0.75rem; color: var(--text-muted)"
+                >Superadmin</span
+              >
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div id="view-dashboard" class="view-section active">
+        <div class="flex-between" style="margin-bottom: 1.5rem">
+          <div style="width: 100%; display: flex; gap: 1.5rem">
+            <div class="kpi-box">
+              <div class="kpi-title">Total Plantations</div>
+              <div class="kpi-val">3</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-title">Active</div>
+              <div class="kpi-val" style="color: var(--secondary)">3</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-title">Completed</div>
+              <div class="kpi-val" style="color: var(--primary)">0</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-title">Pending</div>
+              <div class="kpi-val" style="color: var(--warning)">0</div>
+            </div>
+          </div>
+          <div style="margin-left: 1.5rem">
+            <button class="btn btn-secondary">+ Add Plantation</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size: 1.1rem; margin-bottom: 1rem; font-weight: 600">
+            Plantation List
+          </h3>
+          <div style="overflow-x: auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Name</th>
+                  <th>Site</th>
+                  <th>Phase</th>
+                  <th>Status</th>
+                  <th style="text-align: right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="color: var(--secondary)">PLT003</td>
+                  <td>Kartik Kanzode</td>
+                  <td><span class="badge badge-light">demo site 1</span></td>
+                  <td>
+                    <span class="badge badge-secondary">Identification</span>
+                  </td>
+                  <td><span class="badge badge-primary">Active</span></td>
+                  <td style="text-align: right">
+                    <button class="btn-workflow">Workflow &rarr;</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="color: var(--secondary)">PLT002</td>
+                  <td>dfhusdn 2</td>
+                  <td><span class="badge badge-light">demo site 1</span></td>
+                  <td>
+                    <span class="badge badge-secondary">Identification</span>
+                  </td>
+                  <td><span class="badge badge-primary">Active</span></td>
+                  <td style="text-align: right">
+                    <button class="btn-workflow">Workflow &rarr;</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="color: var(--secondary)">PLT001</td>
+                  <td>Plantation 1</td>
+                  <td><span class="badge badge-light">demo site 1</span></td>
+                  <td>
+                    <span class="badge badge-secondary">Observation</span>
+                  </td>
+                  <td><span class="badge badge-primary">Active</span></td>
+                  <td style="text-align: right">
+                    <button class="btn-workflow">Workflow &rarr;</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-analytics" class="view-section">
+        <div class="flex-between" style="margin-bottom: 1.5rem">
+          <div>
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 4px">
+              Plantation Analytics
+            </h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem">
+              Real-time monitoring of crop performance and resource
+              distribution.
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px">
+            <button class="btn btn-outline">
+              <i class="fa-regular fa-calendar"></i> Last 6 Months
+            </button>
+            <button class="btn btn-warning">
+              <i class="fa-solid fa-download"></i> Export Report
+            </button>
+          </div>
+        </div>
+
+        <div class="analytics-top-grid">
+          <div class="card">
+            <div class="flex-between">
+              <div>
+                <h3 style="font-size: 1.1rem; font-weight: 600">
+                  Yield Forecast vs Actual
+                </h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted)">
+                  Comparison of projected growth vs measured output
+                </p>
+              </div>
+              <div style="text-align: right">
+                <div
+                  style="
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: var(--warning);
+                  "
+                >
+                  420 Tons
+                </div>
+                <div
+                  style="
+                    font-size: 0.8rem;
+                    color: var(--primary);
+                    font-weight: 600;
+                  "
+                >
+                  +12.5% vs target
+                </div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="yieldChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3
+              style="
+                font-size: 1.1rem;
+                font-weight: 600;
+                text-align: left;
+                margin-bottom: 1rem;
+              "
+            >
+              Crop Health Distribution
+            </h3>
+            <div class="chart-container-donut">
+              <canvas id="healthChart"></canvas>
+            </div>
+            <div
+              style="margin-top: 1.5rem; font-size: 0.85rem; padding: 0 10px"
+            >
+              <div class="flex-between" style="margin-bottom: 8px">
+                <span
+                  ><i
+                    class="fa-solid fa-circle"
+                    style="
+                      color: var(--primary);
+                      font-size: 0.7rem;
+                      margin-right: 5px;
+                    "
+                  ></i>
+                  Optimal</span
+                >
+                <strong style="color: var(--text-main)">75%</strong>
+              </div>
+              <div class="flex-between" style="margin-bottom: 8px">
+                <span
+                  ><i
+                    class="fa-solid fa-circle"
+                    style="
+                      color: var(--warning);
+                      font-size: 0.7rem;
+                      margin-right: 5px;
+                    "
+                  ></i>
+                  Action Required</span
+                >
+                <strong style="color: var(--text-main)">15%</strong>
+              </div>
+              <div class="flex-between">
+                <span
+                  ><i
+                    class="fa-solid fa-circle"
+                    style="
+                      color: var(--danger);
+                      font-size: 0.7rem;
+                      margin-right: 5px;
+                    "
+                  ></i>
+                  Critical</span
+                >
+                <strong style="color: var(--text-main)">10%</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="analytics-bottom-grid">
+          <div class="card">
+            <h3
+              style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1.5rem"
+            >
+              Resource Utilization
+            </h3>
+
+            <div class="progress-group">
+              <div class="progress-label">
+                <span>Water Irrigation</span> <span>72%</span>
+              </div>
+              <div class="progress-track">
+                <div
+                  class="progress-fill"
+                  style="width: 72%; background: var(--text-muted)"
+                ></div>
+              </div>
+            </div>
+            <div class="progress-group">
+              <div class="progress-label">
+                <span>Fertilizer Stock</span> <span>66%</span>
+              </div>
+              <div class="progress-track">
+                <div
+                  class="progress-fill"
+                  style="width: 66%; background: var(--primary)"
+                ></div>
+              </div>
+            </div>
+            <div class="progress-group" style="margin-bottom: 0">
+              <div class="progress-label">
+                <span>Labor Efficiency</span> <span>94%</span>
+              </div>
+              <div class="progress-track">
+                <div
+                  class="progress-fill"
+                  style="width: 94%; background: var(--warning)"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="flex-between" style="margin-bottom: 1rem">
+              <h3 style="font-size: 1.1rem; font-weight: 600">
+                Top Performing Plantations
+              </h3>
+              <a
+                href="#"
+                style="
+                  color: var(--warning);
+                  font-size: 0.9rem;
+                  text-decoration: none;
+                  font-weight: 600;
+                "
+                >View All &rarr;</a
+              >
+            </div>
+            <div style="overflow-x: auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Plantation</th>
+                    <th>Crop</th>
+                    <th>Efficiency</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="font-weight: 600">Plantation 1</td>
+                    <td>Neem</td>
+                    <td style="color: var(--primary)">1</td>
+                    <td><span class="badge badge-primary">Active</span></td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 600">dfhusdn 2</td>
+                    <td>N/A</td>
+                    <td style="color: var(--primary)">0</td>
+                    <td><span class="badge badge-primary">Active</span></td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 600">Kartik Kanzode</td>
+                    <td>N/A</td>
+                    <td style="color: var(--primary)">0</td>
+                    <td><span class="badge badge-primary">Active</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 1. Tab Switching
+      function switchTab(tabId, element) {
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((el) => el.classList.remove("active"));
+        element.classList.add("active");
+        document
+          .querySelectorAll(".view-section")
+          .forEach((el) => el.classList.remove("active"));
+        document.getElementById("view-" + tabId).classList.add("active");
+      }
+
+      // Keep track of charts
+      let yieldChart, healthChart;
+
+      // 2. Theme Toggle Logic
+      function toggleTheme() {
+        document.body.classList.toggle("dark-mode");
+        const toggleIcon = document
+          .getElementById("theme-toggle")
+          .querySelector("i");
+
+        if (document.body.classList.contains("dark-mode")) {
+          toggleIcon.classList.remove("fa-moon");
+          toggleIcon.classList.add("fa-sun");
+        } else {
+          toggleIcon.classList.remove("fa-sun");
+          toggleIcon.classList.add("fa-moon");
+        }
+
+        // Re-render charts to catch new CSS variable colors
+        renderCharts();
+      }
+
+      // 3. Render Charts Function (allows dynamic theme updating)
+      function renderCharts() {
+        // Get CSS Variables for charts
+        const rootStyle = getComputedStyle(document.body);
+        const textColor = rootStyle.getPropertyValue("--text-muted").trim();
+        const gridColor = rootStyle.getPropertyValue("--chart-grid").trim();
+        const primaryColor = rootStyle.getPropertyValue("--primary").trim();
+        const secondaryColor = rootStyle.getPropertyValue("--secondary").trim();
+
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = textColor;
+
+        // Destroy existing charts if they exist to prevent hover glitches
+        if (yieldChart) yieldChart.destroy();
+        if (healthChart) healthChart.destroy();
+
+        // A. Line Chart (Gradient style like NiceDash)
+        const ctxYield = document.getElementById("yieldChart").getContext("2d");
+
+        // Create nice fading gradient under the line
+        const gradient = ctxYield.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, "rgba(93, 135, 255, 0.4)"); // Secondary blue
+        gradient.addColorStop(1, "rgba(93, 135, 255, 0.0)");
+
+        yieldChart = new Chart(ctxYield, {
+          type: "line",
+          data: {
+            labels: [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ],
+            datasets: [
+              {
+                data: [
+                  0.96, 0.98, 1.02, 1.05, 1.04, 1.01, 1.03, 1.06, 1.02, 1.05,
+                  1.07, 1.08,
+                ],
+                borderColor: secondaryColor,
+                backgroundColor: gradient,
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4, // Smooth curve
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                pointBackgroundColor: secondaryColor,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false } }, // Hide vertical grid lines
+              y: {
+                min: 0.94,
+                max: 1.08,
+                grid: { color: gridColor, drawBorder: false },
+              },
+            },
+          },
+        });
+
+        // B. Donut Chart (NiceDash Vibrant Colors)
+        const ctxHealth = document
+          .getElementById("healthChart")
+          .getContext("2d");
+        healthChart = new Chart(ctxHealth, {
+          type: "doughnut",
+          data: {
+            labels: ["Optimal", "Action Required", "Critical"],
+            datasets: [
+              {
+                data: [75, 15, 10],
+                backgroundColor: [
+                  primaryColor, // Teal/Green
+                  "#FFAE1F", // Yellow
+                  "#FA896B", // Red
+                ],
+                borderWidth: 0,
+                hoverOffset: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "75%", // Thinner ring like the references
+            plugins: { legend: { display: false } },
+          },
+        });
+      }
+
+      // Initialize on page load
+      window.onload = renderCharts;
+    </script>
+  </body>
+</html>

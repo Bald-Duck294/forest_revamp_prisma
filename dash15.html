@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForestFix Analytics | Forest Protection Dashboard</title>
+    
+    <!-- CSS and Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js DataLabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet.js for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        emerald: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857', 900: '#064e3b' },
+                        slate: { 50: '#f8fafc', 800: '#1e293b', 900: '#0f172a' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f8fafc; font-family: sans-serif; font-size: 102%; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .tab-btn { transition: all 0.2s ease-in-out; }
+        .tab-btn.active { background-color: #10b981; color: white; border-color: #10b981; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2); }
+        .tab-btn.inactive { background-color: transparent; color: #64748b; border-color: #e2e8f0; }
+        .tab-btn.inactive:hover { background-color: #f1f5f9; color: #1e293b; }
+
+        /* Loader Leaf Animation */
+        #loader { transition: opacity 0.3s ease; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-15px) rotate(10deg); }
+        }
+        @keyframes shadow {
+            0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.5; }
+            50% { transform: translateX(-50%) scale(0.6); opacity: 0.2; }
+        }
+        .animate-float { animation: float 2s ease-in-out infinite; }
+        .animate-shadow { animation: shadow 2s ease-in-out infinite; }
+
+        /* Custom Leaflet overrides */
+        .leaflet-control-layers { border-radius: 0.5rem !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important; }
+        .leaflet-control-layers-toggle { width: 40px !important; height: 40px !important; }
+        .custom-map-icon { text-align: center; font-size: 1.25rem; line-height: 2rem; }
+
+        /* Map scroll overlay */
+        .map-scroll-overlay {
+            position: absolute; inset: 0; background: rgba(15, 23, 42, 0.6); color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 600; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s; z-index: 1000; backdrop-filter: blur(2px);
+        }
+        .map-scroll-overlay.show { opacity: 1; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased overflow-x-hidden">
+
+    <!-- Global Loader -->
+    <div id="loader" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center">
+        <div class="relative w-24 h-24 mb-6">
+            <i data-lucide="leaf" class="absolute inset-0 w-full h-full text-emerald-500 animate-float drop-shadow-md"></i>
+            <div class="absolute -bottom-4 left-1/2 w-12 h-2 bg-emerald-900/20 rounded-[100%] blur-[3px] animate-shadow"></div>
+        </div>
+        <h2 class="text-xl font-semibold text-slate-800 tracking-tight">Refreshing Analytics</h2>
+        <p class="text-slate-500 text-sm mt-1">Syncing real-time forest parameters...</p>
+    </div>
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-[1001] bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="w-full max-w-[1800px] mx-auto px-4 sm:px-6 py-2 flex flex-col xl:flex-row justify-between items-center gap-2">
+            <div class="flex items-center gap-3 w-full xl:w-auto">
+                <div class="bg-emerald-500 p-1.5 rounded-lg text-white">
+                    <i data-lucide="leaf" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 leading-tight">ForestFix</h1>
+                    <p class="text-[10px] text-slate-500 font-medium tracking-wide">PROTECTION ANALYTICS</p>
+                </div>
+            </div>
+            
+            <!-- Global Filters -->
+            <div class="flex flex-wrap items-center gap-2 text-sm w-full xl:w-auto xl:justify-end">
+                <select class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" onchange="refreshData()">
+                    <option>All Ranges</option><option>North Division</option><option>South Valley</option><option>East Plateau</option>
+                </select>
+                <select class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" onchange="refreshData()">
+                    <option>All Beats</option><option>Beat Alpha</option><option>Beat Beta</option><option>River Buffer</option>
+                </select>
+                
+                <div class="flex items-center gap-2">
+                    <select id="timeFilter" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" onchange="handleTimeFilterChange(this)">
+                        <option value="today">Today</option>
+                        <option value="week">Last Week</option>
+                        <option value="month" selected>Last Month</option>
+                        <option value="custom">Custom Date</option>
+                    </select>
+                    
+                    <!-- Custom Date Picker -->
+                    <div id="customDateContainer" class="hidden flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 transition-all">
+                        <input type="date" class="bg-transparent text-slate-700 focus:outline-none text-[11px]" onchange="refreshData()">
+                        <span class="text-slate-400 text-[11px]">to</span>
+                        <input type="date" class="bg-transparent text-slate-700 focus:outline-none text-[11px]" onchange="refreshData()">
+                    </div>
+                </div>
+
+                <button onclick="refreshData()" class="bg-emerald-500 hover:bg-emerald-600 text-white p-1.5 rounded-lg transition-colors shadow-sm" title="Refresh Data">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-[1800px] mx-auto px-4 sm:px-6 py-4">
+        
+        <!-- Main KPI Cards (Grid cols 6 now to accommodate Assets) -->
+        <div id="main-kpi-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-5 transition-all duration-300">
+            <!-- KPI 1 -->
+            <div class="bg-white rounded-xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                <div class="absolute right-0 top-0 w-20 h-20 bg-blue-50 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 mb-0.5">On Duty Officers</p>
+                        <h3 class="text-2xl font-bold text-slate-800">412</h3>
+                    </div>
+                    <div class="p-1.5 bg-blue-100 text-blue-600 rounded-lg"><i data-lucide="users" class="w-4 h-4"></i></div>
+                </div>
+                <p class="text-[10px] text-emerald-600 font-medium flex items-center gap-1"><i data-lucide="trending-up" class="w-3 h-3"></i> 98% Attendance</p>
+            </div>
+
+            <!-- KPI 2 -->
+            <div class="bg-white rounded-xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                <div class="absolute right-0 top-0 w-20 h-20 bg-indigo-50 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 mb-0.5">Patrol Status</p>
+                        <h3 class="text-2xl font-bold text-slate-800">1,204</h3>
+                    </div>
+                    <div class="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg"><i data-lucide="map" class="w-4 h-4"></i></div>
+                </div>
+                <p class="text-[10px] text-slate-500">Total beats covered this period</p>
+            </div>
+
+            <!-- KPI 3 (Clickable) -->
+            <div onclick="navigateTo('criminal')" class="bg-white rounded-xl p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer relative overflow-hidden group transform hover:-translate-y-0.5">
+                <div class="absolute right-0 top-0 w-20 h-20 bg-rose-50 rounded-bl-full -z-10 group-hover:bg-rose-100 transition-colors"></div>
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 mb-0.5">Criminal Activity</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-criminal">87</h3>
+                    </div>
+                    <div class="p-1.5 bg-rose-100 text-rose-600 rounded-lg"><i data-lucide="alert-triangle" class="w-4 h-4"></i></div>
+                </div>
+                <p class="text-[10px] text-rose-500 font-medium flex items-center gap-1">Click to view details <i data-lucide="arrow-right" class="w-2.5 h-2.5"></i></p>
+            </div>
+
+            <!-- KPI 4 (Clickable) -->
+            <div onclick="navigateTo('events')" class="bg-white rounded-xl p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer relative overflow-hidden group transform hover:-translate-y-0.5">
+                <div class="absolute right-0 top-0 w-20 h-20 bg-amber-50 rounded-bl-full -z-10 group-hover:bg-amber-100 transition-colors"></div>
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 mb-0.5">Events & Monitoring</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-events">342</h3>
+                    </div>
+                    <div class="p-1.5 bg-amber-100 text-amber-600 rounded-lg"><i data-lucide="binoculars" class="w-4 h-4"></i></div>
+                </div>
+                <p class="text-[10px] text-amber-500 font-medium flex items-center gap-1">Click to view details <i data-lucide="arrow-right" class="w-2.5 h-2.5"></i></p>
+            </div>
+
+            <!-- KPI 5 (Clickable) -->
+            <div onclick="navigateTo('fire')" class="bg-white rounded-xl p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer relative overflow-hidden group transform hover:-translate-y-0.5">
+                <div class="absolute right-0 top-0 w-20 h-20 bg-orange-50 rounded-bl-full -z-10 group-hover:bg-orange-100 transition-colors"></div>
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 mb-0.5">Fire Alerts</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-fire">12</h3>
+                    </div>
+                    <div class="p-1.5 bg-orange-100 text-orange-600 rounded-lg"><i data-lucide="flame" class="w-4 h-4"></i></div>
+                </div>
+                <p class="text-[10px] text-orange-500 font-medium flex items-center gap-1">Click to view details <i data-lucide="arrow-right" class="w-2.5 h-2.5"></i></p>
+            </div>
+
+            <!-- KPI 6 Assets (New) (Clickable) -->
+            <div onclick="navigateTo('assets')" class="bg-white rounded-xl p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer relative overflow-hidden group transform hover:-translate-y-0.5">
+                <div class="absolute right-0 top-0 w-20 h-20 bg-teal-50 rounded-bl-full -z-10 group-hover:bg-teal-100 transition-colors"></div>
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 mb-0.5">Assets & Tools</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-assets">1,450</h3>
+                    </div>
+                    <div class="p-1.5 bg-teal-100 text-teal-600 rounded-lg"><i data-lucide="shield-check" class="w-4 h-4"></i></div>
+                </div>
+                <p class="text-[10px] text-teal-500 font-medium flex items-center gap-1">Click to view details <i data-lucide="arrow-right" class="w-2.5 h-2.5"></i></p>
+            </div>
+        </div>
+
+        <!-- Map & View Toggle Section -->
+        <div class="mb-4">
+            <div class="flex flex-col md:flex-row justify-between items-end gap-3 mb-3">
+                <div class="bg-white p-1 rounded-lg border border-slate-200 inline-flex shadow-sm">
+                    <button id="view-overall" onclick="setViewMode('overall')" class="px-4 py-1.5 text-xs font-medium rounded-md tab-btn active">Overall View (Map)</button>
+                    <button id="view-analytical" onclick="setViewMode('analytical')" class="px-4 py-1.5 text-xs font-medium rounded-md tab-btn inactive border-l-0">Analytical View</button>
+                </div>
+            </div>
+
+            <!-- Overall View Content (Map & Overview Chart) -->
+            <div id="overall-container" class="flex flex-col lg:flex-row gap-3 h-auto lg:h-[480px] z-10">
+                
+                <!-- 65% Map Area -->
+                <div class="w-full lg:w-[65%] h-[400px] lg:h-full bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div id="map" class="w-full h-full z-0"></div>
+                    
+                    <!-- Compartments (Geofence) Toggle Button -->
+                    <button id="btn-compartments" onclick="toggleCompartments()" class="absolute bottom-6 right-4 z-[400] bg-white text-slate-700 px-3 py-2 rounded-lg shadow-md border border-slate-200 text-xs font-semibold hover:bg-slate-50 flex items-center gap-1.5 transition-all">
+                        <i data-lucide="map" class="w-4 h-4"></i> Compartments
+                    </button>
+
+                    <!-- Ctrl+Scroll Overlay Message -->
+                    <div id="scroll-msg" class="map-scroll-overlay">
+                        <div class="flex flex-col items-center gap-2">
+                            <i data-lucide="mouse" class="w-6 h-6"></i>
+                            <span class="text-lg">Use Ctrl + Scroll to zoom</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Map Legend Overlay -->
+                    <div class="absolute bottom-4 left-4 bg-white/90 p-3 rounded-lg shadow-lg border border-slate-100 z-[400] text-xs max-w-[320px]">
+                        <h4 class="font-bold text-slate-800 mb-2 border-b pb-1" id="map-legend-title">All Map Layers</h4>
+                        <div id="map-legend-content" class="grid grid-cols-2 gap-x-4 gap-y-2">
+                            <!-- Filled dynamically by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 35% Overall Bar Chart Area -->
+                <div class="w-full lg:w-[35%] h-[350px] lg:h-full bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col relative">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-semibold text-slate-800 text-sm">Territory Overview</h3>
+                        <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-500"></i>
+                    </div>
+
+                    <!-- Chart Toggles -->
+                    <div class="flex gap-1 mb-3 bg-slate-100 p-1 rounded-lg w-full" id="overall-chart-toggles">
+                        <button onclick="updateOverallChart('criminal', this)" class="flex-1 px-2 py-1.5 text-[11px] rounded font-medium transition-colors bg-white shadow-sm text-emerald-700">Criminal Activities</button>
+                        <button onclick="updateOverallChart('events', this)" class="flex-1 px-2 py-1.5 text-[11px] rounded font-medium transition-colors text-slate-500 hover:text-slate-800">Events & Monitoring</button>
+                    </div>
+
+                    <div class="relative flex-grow w-full">
+                        <canvas id="overall-summary-chart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Analytical View Content -->
+            <div id="analytical-container" class="hidden">
+                <!-- Main Category Tabs -->
+                <div class="border-b border-slate-200 mb-6 flex gap-6 px-2 overflow-x-auto hide-scrollbar" id="main-tabs-container">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Detailed Sub-Category KPI Tiles (Breakdown) -->
+                <div id="breakdown-header" class="mb-3 hidden">
+                    <h2 id="breakdown-title" class="text-lg font-bold text-slate-800 tracking-tight">Category Breakdown</h2>
+                    <p class="text-[11px] text-slate-500">Detailed view of selected category status</p>
+                </div>
+                <div class="flex gap-3 overflow-x-auto hide-scrollbar mb-6 pb-2" id="sub-tabs-container">
+                    <!-- Breakdown cards populated by JS -->
+                </div>
+
+                <!-- Charts Grid -->
+                <div id="charts-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- Dynamic Charts Injected Here -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- Constants & Data Mocks ---
+        const CHART_COLORS = {
+            emerald: '#10b981', rose: '#f43f5e', amber: '#f59e0b', blue: '#3b82f6', 
+            indigo: '#6366f1', purple: '#8b5cf6', teal: '#14b8a6', slate: '#64748b', orange: '#f97316'
+        };
+        const COLOR_PALETTE = [CHART_COLORS.emerald, CHART_COLORS.amber, CHART_COLORS.rose, CHART_COLORS.blue, CHART_COLORS.purple, CHART_COLORS.teal, CHART_COLORS.indigo];
+        
+        const SPECIES = ['Sal', 'Saja', 'Sagaon', 'Beeja', 'Haldu', 'Dhawda', 'Safed Siris', 'Kala Siris', 'Jamun', 'Aam', 'Semal', 'Mahua', 'Tendu', 'Nilgiri'];
+        const ANIMAL_SPECIES = ['Sloth Bear', 'Leopard', 'Hyena', 'Jackal', 'Wild Boar', 'Spotted Deer', 'Sambar'];
+        const REGIONS = ['North Beat A', 'West Ridge', 'River Buffer', 'East Plateau', 'South Valley'];
+
+        // --- Global State ---
+        let viewMode = 'overall'; // overall, analytical
+        let activeMainTab = 'criminal'; // criminal, events, fire, assets
+        let activeSubTab = 'felling'; // defaults
+        let activeCharts = {}; // Stores Chart.js instances { DOM_ID: instance }
+        let overallChartInstance = null; 
+
+        // Map Compartment State
+        let compartmentsLayer = null;
+        let showCompartments = false;
+
+        // --- Map Definitions & Variables ---
+        let map;
+        let mapLayerControl;
+        let overlayMaps = {};
+        
+        // Map markers mapped to categories with distinct emojis/colors
+        const mapLayerDefinitions = {
+            criminal: [
+                { id: 'felling', label: 'Illegal Felling', emoji: '🪓', color: 'bg-rose-500' },
+                { id: 'transport', label: 'Timber Transport', emoji: '🚛', color: 'bg-amber-600' },
+                { id: 'storage', label: 'Timber Storage', emoji: '📦', color: 'bg-orange-500' },
+                { id: 'poaching', label: 'Wild Animal Poaching', emoji: '🐾', color: 'bg-red-700' },
+                { id: 'encroachment', label: 'Encroachment', emoji: '🚧', color: 'bg-purple-600' },
+                { id: 'mining', label: 'Illegal Mining', emoji: '⛏️', color: 'bg-slate-700' }
+            ],
+            events: [
+                { id: 'wildlife', label: 'Wild Animal Sighting', emoji: '🦌', color: 'bg-emerald-600' },
+                { id: 'water', label: 'Water Source Status', emoji: '💧', color: 'bg-blue-500' },
+                { id: 'compensation', label: 'Wildlife Compensation', emoji: '💰', color: 'bg-teal-600' }
+            ],
+            fire: [
+                { id: 'fire', label: 'Fire Alerts', emoji: '🔥', color: 'bg-orange-500' }
+            ],
+            assets: [
+                { id: 'vehicles', label: 'Vehicles', emoji: '🚙', color: 'bg-teal-500' },
+                { id: 'equipment', label: 'Heavy Equipment', emoji: '🚜', color: 'bg-cyan-600' },
+                { id: 'checkposts', label: 'Checkposts', emoji: '🏠', color: 'bg-indigo-500' }
+            ]
+        };
+
+        // Icons mapping for Breakdown sub-tabs
+        const subCategoryIcons = {
+            felling: 'hammer', transport: 'truck', storage: 'box', poaching: 'skull',
+            encroachment: 'columns', mining: 'mountain', wildlife: 'eye',
+            water: 'droplet', compensation: 'banknote', fire: 'flame', inventory: 'shield-check'
+        };
+
+        // Static or simulated breakdown numbers so UI matches
+        const subCategoryData = {
+            felling: 20, transport: 15, storage: 12, poaching: 18, encroachment: 16, mining: 8,
+            wildlife: 18, water: 12, compensation: 7, fire: 45, inventory: 1450
+        };
+
+        // --- Chart Configuration Engine ---
+        const dashboardConfig = {
+            categories: [
+                { id: 'criminal', label: '🌲 Criminal Activity', subTabs: ['felling', 'transport', 'storage', 'poaching', 'encroachment', 'mining'] },
+                { id: 'events', label: '🐾 Events & Monitoring', subTabs: ['wildlife', 'water', 'compensation'] },
+                { id: 'fire', label: '🔥 Fire Incidents', subTabs: [] },
+                { id: 'assets', label: '🛡️ Assets', subTabs: ['inventory'] }
+            ],
+            subCategoryLabels: {
+                felling: 'Illegal Felling', transport: 'Timber Transport', storage: 'Timber Storage',
+                poaching: 'Poaching', encroachment: 'Encroachment', mining: 'Illegal Mining',
+                wildlife: 'Animal Sighting', water: 'Water Status', compensation: 'Compensation',
+                inventory: 'Asset Inventory'
+            },
+            views: {
+                // --- CRIMINAL: ILLEGAL FELLING ---
+                'criminal.felling': [
+                    {
+                        id: 'felling-c1', title: 'Volume Analysis by Species', type: 'bar',
+                        toggles: ['Quantity', 'Volume(cmt)', 'Girth'],
+                        generator: (toggleIdx) => {
+                            const data = SPECIES.map(() => Math.floor(Math.random() * (toggleIdx === 1 ? 50 : 200)) + 10);
+                            return {
+                                labels: SPECIES.slice(0,10), 
+                                datasets: [{ label: ['Quantity', 'Volume', 'Girth'][toggleIdx], data: data.slice(0,10), backgroundColor: CHART_COLORS.emerald, borderRadius: 3 }]
+                            };
+                        },
+                        calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a,b)=>a+b,0).toLocaleString()}`
+                    },
+                    {
+                        id: 'felling-c2', title: 'Probable Reason of Felling', type: 'pie',
+                        toggles: [],
+                        generator: () => {
+                            const data = [Math.random()*40+20, Math.random()*30+10, Math.random()*20+5, Math.random()*10+5];
+                            return {
+                                labels: ['Trade', 'Fuel', 'Agri Land', 'Others'],
+                                datasets: [{ data: data, backgroundColor: [CHART_COLORS.rose, CHART_COLORS.amber, CHART_COLORS.emerald, CHART_COLORS.slate] }]
+                            };
+                        },
+                        calcPill: () => `Avg Trade: 45%`
+                    },
+                    {
+                        id: 'felling-c3', title: 'Range Wise Felling Data', type: 'bar',
+                        toggles: [],
+                        generator: () => {
+                            return {
+                                labels: REGIONS,
+                                datasets: [{ label: 'Incidents', data: REGIONS.map(()=>Math.floor(Math.random()*50)+5), backgroundColor: CHART_COLORS.teal, borderRadius: 3 }]
+                            };
+                        },
+                        options: { indexAxis: 'y' },
+                        calcPill: (data) => `Highest: ${Math.max(...data.datasets[0].data)}`
+                    }
+                ],
+                // --- CRIMINAL: TIMBER TRANSPORT ---
+                'criminal.transport': [
+                    {
+                        id: 'trans-c1', title: 'Transport Vehicle Analytics', type: 'bar',
+                        toggles: ['Quantity', 'Trips'],
+                        generator: (toggleIdx) => {
+                            const vTypes = ['Truck', 'Tractor', 'Tempo', 'Private', 'Others'];
+                            const isQty = toggleIdx === 0;
+                            return {
+                                labels: vTypes,
+                                datasets: [{ label: isQty ? 'Quantity' : 'Trips', data: vTypes.map(()=>Math.floor(Math.random()*(isQty?500:50))+10), backgroundColor: CHART_COLORS.indigo, borderRadius: 3 }]
+                            };
+                        },
+                        calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a,b)=>a+b,0)}`
+                    },
+                    {
+                        id: 'trans-c2', title: 'Top 5 Smuggling Routes', type: 'doughnut',
+                        toggles: [],
+                        generator: () => ({
+                            labels: ['Route 44', 'Forest B', 'River X', 'Vill Path', 'Border'],
+                            datasets: [{ data: [35, 25, 20, 15, 5], backgroundColor: COLOR_PALETTE }]
+                        }),
+                        calcPill: () => `Main Route: 35%`
+                    },
+                    {
+                        id: 'trans-c3', title: '30-Day Transport Trend', type: 'line',
+                        toggles: [],
+                        generator: () => {
+                            const days = Array.from({length: 15}, (_, i) => `D${i+1}`); 
+                            return {
+                                labels: days,
+                                datasets: [{ label: 'Quantity', data: days.map(()=>Math.floor(Math.random()*100)+20), borderColor: CHART_COLORS.rose, backgroundColor: CHART_COLORS.rose+'33', fill: true, tension: 0.4 }]
+                            };
+                        },
+                        calcPill: (data) => `Avg: ${Math.floor(data.datasets[0].data.reduce((a,b)=>a+b,0)/15)}`
+                    }
+                ],
+                // --- CRIMINAL: STORAGE ---
+                'criminal.storage': [
+                    {
+                        id: 'stor-c1', title: 'Storage by Species', type: 'bar',
+                        toggles: [],
+                        generator: () => ({
+                            labels: SPECIES.slice(0, 6),
+                            datasets: [
+                                { label: 'Godown', data: Array(6).fill(0).map(()=>Math.random()*100), backgroundColor: CHART_COLORS.amber },
+                                { label: 'Open Space', data: Array(6).fill(0).map(()=>Math.random()*50), backgroundColor: CHART_COLORS.emerald }
+                            ]
+                        }),
+                        options: { scales: { x: { stacked: true }, y: { stacked: true } } },
+                        calcPill: () => `Total Vol: ~840 Cmt`
+                    },
+                    {
+                        id: 'stor-c2', title: 'Storage Proportion', type: 'pie', toggles: [],
+                        generator: () => ({ labels: ['Sal', 'Sagaon', 'Beeja', 'Others'], datasets: [{ data: [40, 30, 20, 10], backgroundColor: COLOR_PALETTE }] }),
+                        calcPill: () => `Top: Sal (40%)`
+                    },
+                    {
+                        id: 'stor-c3', title: 'Volume Over Time', type: 'bar', toggles: [],
+                        generator: () => {
+                            const d = Array.from({length:5}, (_,i)=>`D${i+1}`);
+                            return {
+                                labels: d,
+                                datasets: [
+                                    { label: 'Godown', data: d.map(()=>Math.random()*200), backgroundColor: CHART_COLORS.blue },
+                                    { label: 'Open', data: d.map(()=>Math.random()*100), backgroundColor: CHART_COLORS.teal }
+                                ]
+                            };
+                        },
+                        calcPill: () => `Trend: Stable`
+                    }
+                ],
+                // --- CRIMINAL: POACHING ---
+                'criminal.poaching': [
+                    {
+                        id: 'poach-c1', title: 'Population vs Sighting', type: 'bar',
+                        toggles: ['Total', 'Age', 'Sex'],
+                        generator: (idx) => {
+                            if(idx === 0) return { labels: ANIMAL_SPECIES, datasets: [{ label: 'Total', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*50)+10), backgroundColor: CHART_COLORS.emerald }] };
+                            if(idx === 1) return { labels: ANIMAL_SPECIES, datasets: [
+                                { label: 'Adult', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*30)), backgroundColor: CHART_COLORS.blue },
+                                { label: 'Sub-adult', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*15)), backgroundColor: CHART_COLORS.teal },
+                                { label: 'Juvenile', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*10)), backgroundColor: CHART_COLORS.emerald }
+                            ]};
+                            return { labels: ANIMAL_SPECIES, datasets: [
+                                { label: 'Male', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*25)), backgroundColor: CHART_COLORS.indigo },
+                                { label: 'Female', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*25)), backgroundColor: CHART_COLORS.rose }
+                            ]};
+                        },
+                        options: (idx) => idx > 0 ? { scales: { x: { stacked: true }, y: { stacked: true } } } : {},
+                        calcPill: () => `Records: 342`
+                    },
+                    {
+                        id: 'poach-c2', title: 'Incident Distribution', type: 'doughnut',
+                        toggles: ['Species', 'Cause'],
+                        generator: (idx) => {
+                            if (idx === 0) return { labels: ANIMAL_SPECIES.slice(0,5), datasets: [{ data: [30, 25, 20, 15, 10], backgroundColor: COLOR_PALETTE }] };
+                            return { labels: ['Natural', 'Poaching', 'Accident', 'Disease'], datasets: [{ data: [45, 30, 15, 10], backgroundColor: [CHART_COLORS.emerald, CHART_COLORS.rose, CHART_COLORS.amber, CHART_COLORS.slate] }] };
+                        },
+                        calcPill: (d, idx) => idx===1 ? `Poach: 30%` : `Top: Bear`
+                    },
+                    {
+                        id: 'poach-c3', title: 'Incidents & Carcass State', type: 'bar',
+                        toggles: [],
+                        generator: () => ({
+                            labels: ANIMAL_SPECIES,
+                            datasets: [
+                                { type: 'bar', label: 'Incidents', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*20)), backgroundColor: CHART_COLORS.rose+'CC', yAxisID: 'y' },
+                                { type: 'line', label: 'Decay %', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*60)+40), borderColor: CHART_COLORS.blue, backgroundColor: CHART_COLORS.blue, yAxisID: 'y1', tension: 0.3 }
+                            ]
+                        }),
+                        options: { scales: { y: { type: 'linear', position: 'left' }, y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } } } },
+                        calcPill: () => `Avg Decay: 68%`
+                    }
+                ],
+                // --- CRIMINAL: ENCROACHMENT ---
+                'criminal.encroachment': [
+                    {
+                        id: 'enc-c1', title: 'Scale Analytics', type: 'bar',
+                        toggles: ['Area', 'Occupants', 'Machinery'],
+                        generator: (idx) => {
+                            const lbls = ['Area', 'Occupants', 'Machines'];
+                            return {
+                                labels: REGIONS,
+                                datasets: [{ label: lbls[idx], data: REGIONS.map(()=>Math.floor(Math.random()*(idx===1?200:50))+5), backgroundColor: idx===0?CHART_COLORS.rose:idx===1?CHART_COLORS.amber:CHART_COLORS.slate }]
+                            };
+                        },
+                        calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a,b)=>a+b,0)}`
+                    },
+                    {
+                        id: 'enc-c2', title: 'Distribution Impact', type: 'pie',
+                        toggles: ['Region', 'Type'],
+                        generator: (idx) => ({
+                            labels: idx===0 ? REGIONS : ['Agriculture', 'Construction', 'Other'],
+                            datasets: [{ data: idx===0 ? [30, 20, 20, 15, 15] : [60, 35, 5], backgroundColor: COLOR_PALETTE }]
+                        }),
+                        calcPill: (d, idx) => idx===1 ? `Agri: 60%` : `Top: North`
+                    },
+                    {
+                        id: 'enc-c3', title: 'Impact vs Resources', type: 'bar',
+                        toggles: ['Area v Mach', 'Occ v Mach'],
+                        generator: (idx) => ({
+                            labels: REGIONS,
+                            datasets: [
+                                { type: 'bar', label: idx===0?'Area':'Occupants', data: REGIONS.map(()=>Math.floor(Math.random()*100)+20), backgroundColor: CHART_COLORS.rose, yAxisID: 'y' },
+                                { type: 'line', label: 'Mach %', data: REGIONS.map(()=>Math.floor(Math.random()*80)+10), borderColor: CHART_COLORS.blue, yAxisID: 'y1' }
+                            ]
+                        }),
+                        options: { scales: { y: { position: 'left' }, y1: { position: 'right', grid: { drawOnChartArea: false } } } },
+                        calcPill: () => `Corr: High`
+                    }
+                ],
+                // --- CRIMINAL: MINING ---
+                'criminal.mining': [
+                    {
+                        id: 'min-c1', title: 'Extraction & Equipment', type: 'bar',
+                        toggles: ['Vol(CuM)', 'Equip', 'Method'],
+                        generator: (idx) => {
+                            const sites = ['River Z', 'Hill B', 'Bed 4', 'Stream A', 'Quarry'];
+                            if(idx < 2) return { labels: sites, datasets: [{ label: idx===0?'Volume':'Equipment', data: sites.map(()=>Math.floor(Math.random()*(idx===0?1000:20))), backgroundColor: CHART_COLORS.amber }] };
+                            return { labels: sites, datasets: [
+                                { label: 'Mech', data: sites.map(()=>Math.floor(Math.random()*500)), backgroundColor: CHART_COLORS.rose },
+                                { label: 'Manual', data: sites.map(()=>Math.floor(Math.random()*300)), backgroundColor: CHART_COLORS.blue }
+                            ]};
+                        },
+                        options: (idx) => idx === 2 ? { scales: { x: { stacked: true }, y: { stacked: true } } } : {},
+                        calcPill: () => `Sites: 5`
+                    },
+                    {
+                        id: 'min-c2', title: 'Mineral Distribution', type: 'doughnut', toggles: ['Type', 'Method'],
+                        generator: (idx) => ({ labels: idx===0?['Sand','Gravel','Stone']:['Mech','Manual'], datasets: [{ data: idx===0?[50,30,20]:[70,30], backgroundColor: COLOR_PALETTE }] }),
+                        calcPill: () => `Dom: Sand`
+                    },
+                    {
+                        id: 'min-c3', title: 'Impact vs Mechanization', type: 'bar', toggles: [],
+                        generator: () => ({
+                            labels: ['River Z', 'Hill B', 'Bed 4', 'Stream A', 'Quarry'],
+                            datasets: [
+                                { type: 'bar', label: 'Volume', data: [800, 450, 300, 600, 950], backgroundColor: CHART_COLORS.rose, yAxisID: 'y' },
+                                { type: 'line', label: 'Mech %', data: [90, 40, 20, 80, 95], borderColor: CHART_COLORS.blue, yAxisID: 'y1' }
+                            ]
+                        }),
+                        options: { scales: { y: { position: 'left' }, y1: { position: 'right', grid: { drawOnChartArea: false } } } },
+                        calcPill: () => `Avg: 65%`
+                    }
+                ],
+
+                // --- EVENTS: WILDLIFE ---
+                'events.wildlife': [
+                    {
+                        id: 'wl-c1', title: 'Species Sighting Analysis', type: 'bar',
+                        toggles: ['Type', 'Gender'],
+                        generator: (idx) => {
+                            if(idx===0) return { labels: ANIMAL_SPECIES, datasets: [
+                                { label: 'Direct', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*40)), backgroundColor: CHART_COLORS.emerald },
+                                { label: 'Indirect', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*80)), backgroundColor: CHART_COLORS.teal }
+                            ]};
+                            return { labels: ANIMAL_SPECIES, datasets: [
+                                { label: 'Male', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*30)), backgroundColor: CHART_COLORS.blue },
+                                { label: 'Female', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*30)), backgroundColor: CHART_COLORS.rose },
+                                { label: 'Unk', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*20)), backgroundColor: CHART_COLORS.slate }
+                            ]};
+                        },
+                        options: { scales: { x: { stacked: true }, y: { stacked: true } } },
+                        calcPill: () => `Total: 412`
+                    },
+                    {
+                        id: 'wl-c2', title: 'Evidence Type Distribution', type: 'pie', toggles: ['Evidence', 'Gender'],
+                        generator: (idx) => ({
+                            labels: idx===0?['Photo','Pugmark','Scat','Scratch','Part']:['Male','Female','Unknown'],
+                            datasets: [{ data: idx===0?[25,35,20,15,5]:[40,40,20], backgroundColor: COLOR_PALETTE }]
+                        }),
+                        calcPill: () => `Pri: Pugmark`
+                    },
+                    {
+                        id: 'wl-c3', title: 'Detection vs Evidence Strength', type: 'bar', toggles: [],
+                        generator: () => ({
+                            labels: ANIMAL_SPECIES,
+                            datasets: [
+                                { type: 'bar', label: 'Sightings', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*100)), backgroundColor: CHART_COLORS.amber, yAxisID: 'y' },
+                                { type: 'line', label: 'Reliability %', data: ANIMAL_SPECIES.map(()=>Math.floor(Math.random()*50)+50), borderColor: CHART_COLORS.emerald, yAxisID: 'y1' }
+                            ]
+                        }),
+                        options: { scales: { y: { position: 'left' }, y1: { position: 'right', grid: { drawOnChartArea: false } } } },
+                        calcPill: () => `Rel: 72%`
+                    }
+                ],
+                // --- EVENTS: WATER ---
+                'events.water': [
+                    {
+                        id: 'wat-c1', title: 'Water Availability', type: 'bar', toggles: ['Dry/Wet', 'Activity'],
+                        generator: (idx) => {
+                            const srcs = ['Pond', 'Dam', 'Stream', 'Well', 'Other'];
+                            if(idx===0) return { labels: srcs, datasets: [
+                                { label: 'Wet', data: srcs.map(()=>Math.floor(Math.random()*30)), backgroundColor: CHART_COLORS.blue },
+                                { label: 'Dry', data: srcs.map(()=>Math.floor(Math.random()*15)), backgroundColor: CHART_COLORS.amber }
+                            ]};
+                            return { labels: srcs, datasets: [{ label: 'Signs', data: srcs.map(()=>Math.floor(Math.random()*80)), backgroundColor: CHART_COLORS.emerald }] };
+                        },
+                        options: (idx) => idx===0 ? { scales: { x: { stacked: true }, y: { stacked: true } } } : {},
+                        calcPill: () => `Active: 68%`
+                    },
+                    {
+                        id: 'wat-c2', title: 'Water Quality', type: 'doughnut', toggles: [],
+                        generator: () => ({ labels: ['Clear', 'Turbid', 'Contam'], datasets: [{ data: [60, 25, 15], backgroundColor: [CHART_COLORS.teal, CHART_COLORS.amber, CHART_COLORS.rose] }] }),
+                        calcPill: () => `Good: 60%`
+                    },
+                    {
+                        id: 'wat-c3', title: 'Quality vs Usage Pressure', type: 'bar', toggles: [],
+                        generator: () => ({
+                            labels: ['Pond', 'Dam', 'Stream', 'Well', 'Other'],
+                            datasets: [
+                                { type: 'bar', label: 'Signs', data: [80, 40, 90, 20, 10], backgroundColor: CHART_COLORS.indigo, yAxisID: 'y' },
+                                { type: 'line', label: 'Risk %', data: [30, 10, 40, 60, 20], borderColor: CHART_COLORS.rose, yAxisID: 'y1' }
+                            ]
+                        }),
+                        options: { scales: { y: { position: 'left' }, y1: { position: 'right', grid: { drawOnChartArea: false } } } },
+                        calcPill: () => `Risk: Streams`
+                    }
+                ],
+                // --- EVENTS: COMPENSATION ---
+                'events.compensation': [
+                    {
+                        id: 'comp-c1', title: 'Claims by Category', type: 'bar', toggles: ['Amount', 'Cases', 'Days'],
+                        generator: (idx) => {
+                            const cats = ['Crop', 'Cattle', 'H.Inj', 'H.Death', 'House'];
+                            const mult = idx===0 ? 10000 : idx===1 ? 5 : 10;
+                            return { labels: cats, datasets: [{ label: ['Amount', 'Cases', 'Days'][idx], data: cats.map(()=>Math.floor(Math.random()*10*mult)+mult), backgroundColor: CHART_COLORS.amber }] };
+                        },
+                        calcPill: (data, idx) => idx===0 ? `₹${(data.datasets[0].data.reduce((a,b)=>a+b,0)/1000).toFixed(1)}k` : `Avg: 45D`
+                    },
+                    {
+                        id: 'comp-c2', title: 'Distribution Overview', type: 'pie', toggles: [],
+                        generator: () => ({ labels: ['Crop', 'Cattle', 'H.Inj', 'Others'], datasets: [{ data: [50, 30, 15, 5], backgroundColor: COLOR_PALETTE }] }),
+                        calcPill: () => `High: Crop`
+                    },
+                    {
+                        id: 'comp-c3', title: 'Burden vs Efficiency', type: 'bar', toggles: [],
+                        generator: () => ({
+                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                            datasets: [
+                                { type: 'bar', label: 'Cases', data: [12, 19, 15, 25, 22], backgroundColor: CHART_COLORS.rose, yAxisID: 'y' },
+                                { type: 'line', label: 'Avg Days', data: [30, 35, 25, 45, 40], borderColor: CHART_COLORS.blue, yAxisID: 'y1' }
+                            ]
+                        }),
+                        options: { scales: { y: { position: 'left' }, y1: { position: 'right', grid: { drawOnChartArea: false } } } },
+                        calcPill: () => `Backlog: 12%`
+                    }
+                ],
+
+                // --- FIRE INCIDENTS ---
+                'fire.none': [
+                    {
+                        id: 'fire-c1', title: 'Incidents by Region & Severity', type: 'bar', toggles: ['Incidents', 'Area', 'Severity'],
+                        generator: (idx) => {
+                            if(idx < 2) return { labels: REGIONS, datasets: [{ label: idx===0?'Incidents':'Area(Ha)', data: REGIONS.map(()=>Math.floor(Math.random()*(idx===0?20:100))), backgroundColor: CHART_COLORS.rose }] };
+                            return { labels: REGIONS, datasets: [
+                                { label: 'High', data: REGIONS.map(()=>Math.floor(Math.random()*5)), backgroundColor: CHART_COLORS.rose },
+                                { label: 'Med', data: REGIONS.map(()=>Math.floor(Math.random()*10)), backgroundColor: CHART_COLORS.amber },
+                                { label: 'Low', data: REGIONS.map(()=>Math.floor(Math.random()*15)), backgroundColor: CHART_COLORS.amber+'88' }
+                            ]};
+                        },
+                        options: (idx) => idx===2 ? { scales: { x: { stacked: true }, y: { stacked: true } } } : {},
+                        calcPill: () => `Alerts: 45`
+                    },
+                    {
+                        id: 'fire-c2', title: 'Fire Cause Distribution', type: 'doughnut', toggles: ['Cause', 'Region'],
+                        generator: (idx) => ({ labels: idx===0?['Natural','Neglig','Intent','Unknown']:REGIONS, datasets: [{ data: idx===0?[20,40,30,10]:[25,20,15,30,10], backgroundColor: [CHART_COLORS.rose, CHART_COLORS.amber, CHART_COLORS.orange, CHART_COLORS.slate] }] }),
+                        calcPill: () => `Top: Neglig`
+                    },
+                    {
+                        id: 'fire-c3', title: '30-Day Trend', type: 'line', toggles: ['Incidents', 'Area'],
+                        generator: (idx) => {
+                            const d = Array.from({length:15},(_,i)=>`D${i+1}`); 
+                            return { labels: d, datasets: [{ label: idx===0?'Incidents':'Area Burnt', data: d.map(()=>Math.floor(Math.random()*(idx===0?5:20))), borderColor: CHART_COLORS.rose, backgroundColor: CHART_COLORS.rose+'22', fill: true, tension: 0.4 }] };
+                        },
+                        calcPill: () => `Peak: D14`
+                    },
+                    {
+                        id: 'fire-c4', title: 'Response Time & Risk Zones', type: 'bar', toggles: ['Mins', 'Index'],
+                        generator: (idx) => ({ labels: REGIONS, datasets: [{ label: idx===0?'Avg Mins':'Index', data: REGIONS.map(()=>Math.floor(Math.random()*(idx===0?120:100))), backgroundColor: idx===0?CHART_COLORS.indigo:CHART_COLORS.rose }] }),
+                        options: { indexAxis: 'y' },
+                        calcPill: () => `Avg: 42m`
+                    }
+                ],
+
+                // --- ASSETS (New Section) ---
+                'assets.inventory': [
+                    {
+                        id: 'ast-c1', title: 'Asset Distribution', type: 'pie', toggles: [],
+                        generator: () => ({ labels: ['Vehicles', 'Heavy Eq.', 'Checkposts', 'Drones'], datasets: [{ data: [45, 15, 10, 30], backgroundColor: COLOR_PALETTE }] }),
+                        calcPill: () => `Total: 1,450`
+                    },
+                    {
+                        id: 'ast-c2', title: 'Operational Status', type: 'bar', toggles: ['By Type'],
+                        generator: () => ({
+                            labels: ['Vehicles', 'Heavy Eq.', 'Checkposts', 'Drones'],
+                            datasets: [
+                                { label: 'Active', data: [40, 10, 9, 25], backgroundColor: CHART_COLORS.emerald },
+                                { label: 'Maintenance', data: [5, 5, 1, 5], backgroundColor: CHART_COLORS.amber }
+                            ]
+                        }),
+                        options: { scales: { x: { stacked: true }, y: { stacked: true } } },
+                        calcPill: () => `Active: 85%`
+                    },
+                    {
+                        id: 'ast-c3', title: 'Deployment Trend', type: 'line', toggles: [],
+                        generator: () => {
+                            const d = Array.from({length:10},(_,i)=>`Wk${i+1}`);
+                            return { labels: d, datasets: [{ label: 'Deployed', data: d.map(()=>Math.floor(Math.random()*20)+80), borderColor: CHART_COLORS.indigo, backgroundColor: CHART_COLORS.indigo+'22', fill: true, tension: 0.4 }] };
+                        },
+                        calcPill: () => `Stable`
+                    }
+                ]
+            }
+        };
+
+        // --- Initialization & Setup ---
+        window.onload = () => {
+            Chart.register(ChartDataLabels);
+            lucide.createIcons();
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#64748b';
+            Chart.defaults.plugins.legend.position = 'bottom';
+            Chart.defaults.plugins.legend.labels.usePointStyle = true;
+            Chart.defaults.plugins.legend.labels.boxWidth = 8;
+            Chart.defaults.plugins.legend.labels.font = { size: 10 };
+            
+            // Random Initial KPIs
+            document.getElementById('kpi-criminal').innerText = Math.floor(Math.random() * 50) + 50;
+            document.getElementById('kpi-events').innerText = Math.floor(Math.random() * 200) + 150;
+            document.getElementById('kpi-fire').innerText = Math.floor(Math.random() * 20) + 5;
+            document.getElementById('kpi-assets').innerText = Math.floor(Math.random() * 500) + 1000;
+
+            initLeafletMap();
+            initOverallSummaryChart();
+        };
+
+        // --- Leaflet Map Logic ---
+        function initLeafletMap() {
+            map = L.map('map', {
+                scrollWheelZoom: false 
+            }).setView([21.640, 79.560], 11);
+            
+            const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' });
+            const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' });
+            
+            osm.addTo(map); 
+            
+            mapLayerControl = L.control.layers(
+                { "Default Map": osm, "Satellite View": satellite }, 
+                {}, 
+                { collapsed: true } 
+            ).addTo(map);
+
+            const mapContainer = document.getElementById('map');
+            const scrollMsg = document.getElementById('scroll-msg');
+            let scrollTimeout;
+
+            mapContainer.addEventListener('wheel', (e) => {
+                if (e.ctrlKey) {
+                    if (!map.scrollWheelZoom.enabled()) map.scrollWheelZoom.enable();
+                } else {
+                    if (map.scrollWheelZoom.enabled()) map.scrollWheelZoom.disable();
+                    scrollMsg.classList.add('show');
+                    clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(() => scrollMsg.classList.remove('show'), 1000);
+                }
+            });
+
+            initAllMapLayers();
+        }
+
+        function createCustomMarkerIcon(emoji, colorClass) {
+            return L.divIcon({
+                html: `<div class="${colorClass} text-white rounded-full shadow-lg border border-white w-7 h-7 flex items-center justify-center custom-map-icon text-sm">${emoji}</div>`,
+                className: 'custom-leaflet-icon-container',
+                iconSize: [28, 28],
+                iconAnchor: [14, 14],
+                popupAnchor: [0, -14]
+            });
+        }
+
+        function initAllMapLayers() {
+            for (let key in overlayMaps) {
+                mapLayerControl.removeLayer(overlayMaps[key]);
+                map.removeLayer(overlayMaps[key]);
+            }
+            overlayMaps = {};
+
+            const legendContainer = document.getElementById('map-legend-content');
+            legendContainer.innerHTML = '';
+            
+            Object.keys(mapLayerDefinitions).forEach(category => {
+                const layers = mapLayerDefinitions[category];
+
+                layers.forEach((layerDef) => {
+                    const layerGroup = L.layerGroup();
+                    const numMarkers = Math.floor(Math.random() * 5) + 2; 
+                    for(let i=0; i<numMarkers; i++) {
+                        const lat = 21.640 + (Math.random() - 0.5) * 0.3;
+                        const lng = 79.560 + (Math.random() - 0.5) * 0.3;
+                        
+                        const marker = L.marker([lat, lng], { icon: createCustomMarkerIcon(layerDef.emoji, layerDef.color) });
+                        marker.bindPopup(`<div class="font-sans">
+                            <h4 class="font-bold text-slate-800 text-xs mb-1">${layerDef.emoji} ${layerDef.label}</h4>
+                            <p class="text-[10px] text-slate-500 mb-1">Loc: ${lat.toFixed(4)}, ${lng.toFixed(4)}</p>
+                        </div>`);
+                        layerGroup.addLayer(marker);
+                    }
+
+                    overlayMaps[layerDef.label] = layerGroup;
+                    
+                    const controlLabel = `<span class="flex items-center gap-1.5 ml-1 text-[11px] text-slate-700">${layerDef.emoji} ${layerDef.label}</span>`;
+                    mapLayerControl.addOverlay(layerGroup, controlLabel);
+                    
+                    // Select some defaults to be ON
+                    if(['felling', 'wildlife', 'fire', 'vehicles'].includes(layerDef.id)) {
+                        layerGroup.addTo(map);
+                    }
+
+                    legendContainer.innerHTML += `
+                        <div class="flex items-center gap-1.5">
+                            <div class="${layerDef.color} w-2.5 h-2.5 rounded-full flex-shrink-0"></div>
+                            <span class="text-slate-600 truncate text-[10px] leading-tight" title="${layerDef.label}">${layerDef.label}</span>
+                        </div>`;
+                });
+            });
+        }
+
+        // Toggle Geofence Compartments Layer
+        function toggleCompartments() {
+            showCompartments = !showCompartments;
+            const btn = document.getElementById('btn-compartments');
+            if(showCompartments) {
+                btn.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-300');
+                btn.classList.remove('bg-white', 'text-slate-700');
+                
+                if(!compartmentsLayer) {
+                    compartmentsLayer = L.layerGroup();
+                    // Simulate random forest compartment blocks
+                    const p1 = L.polygon([[21.65, 79.55], [21.67, 79.56], [21.66, 79.58], [21.63, 79.57]], {color: '#10b981', weight: 2, fillOpacity: 0.15});
+                    const p2 = L.polygon([[21.61, 79.54], [21.63, 79.52], [21.64, 79.55], [21.62, 79.56]], {color: '#3b82f6', weight: 2, fillOpacity: 0.15});
+                    const p3 = L.polygon([[21.67, 79.50], [21.69, 79.51], [21.68, 79.53], [21.66, 79.51]], {color: '#f59e0b', weight: 2, fillOpacity: 0.15});
+                    compartmentsLayer.addLayer(p1).addLayer(p2).addLayer(p3);
+                }
+                map.addLayer(compartmentsLayer);
+            } else {
+                btn.classList.remove('bg-emerald-100', 'text-emerald-700', 'border-emerald-300');
+                btn.classList.add('bg-white', 'text-slate-700');
+                if(compartmentsLayer) map.removeLayer(compartmentsLayer);
+            }
+        }
+
+        // --- Overall Summary Chart Logic (35% section) ---
+        function initOverallSummaryChart() {
+            const ctx = document.getElementById('overall-summary-chart').getContext('2d');
+            overallChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: getOverallChartData('criminal'),
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { right: 35 } }, 
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 8, cornerRadius: 6 },
+                        datalabels: {
+                            display: true,
+                            align: 'end',
+                            anchor: 'end',
+                            color: '#475569',
+                            font: { size: 10, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function getOverallChartData(category) {
+            if (category === 'criminal') {
+                return {
+                    labels: ['Felling', 'Transport', 'Storage', 'Poaching', 'Encroach', 'Mining'],
+                    datasets: [{
+                        label: 'Incidents Count',
+                        data: [Math.floor(Math.random()*80)+20, Math.floor(Math.random()*60)+10, Math.floor(Math.random()*40)+5, Math.floor(Math.random()*30)+5, Math.floor(Math.random()*90)+20, Math.floor(Math.random()*50)+10],
+                        backgroundColor: CHART_COLORS.rose,
+                        borderRadius: 4
+                    }]
+                };
+            } else {
+                return {
+                    labels: ['Wild Sighting', 'Water Status', 'Compensation'],
+                    datasets: [{
+                        label: 'Recorded Events',
+                        data: [Math.floor(Math.random()*200)+50, Math.floor(Math.random()*150)+30, Math.floor(Math.random()*100)+20],
+                        backgroundColor: CHART_COLORS.amber,
+                        borderRadius: 4
+                    }]
+                };
+            }
+        }
+
+        function updateOverallChart(category, btnElement) {
+            const container = document.getElementById('overall-chart-toggles');
+            const buttons = container.querySelectorAll('button');
+            buttons.forEach(b => {
+                b.className = 'flex-1 px-2 py-1.5 text-[11px] rounded font-medium transition-colors text-slate-500 hover:text-slate-800';
+            });
+            btnElement.className = 'flex-1 px-2 py-1.5 text-[11px] rounded font-medium transition-colors bg-white shadow-sm text-emerald-700';
+
+            if (overallChartInstance) {
+                overallChartInstance.data = getOverallChartData(category);
+                overallChartInstance.update();
+            }
+        }
+
+        // --- Core Functions ---
+        function handleTimeFilterChange(selectElement) {
+            const customContainer = document.getElementById('customDateContainer');
+            if (selectElement.value === 'custom') customContainer.classList.remove('hidden');
+            else customContainer.classList.add('hidden');
+            refreshData();
+        }
+
+        function setViewMode(mode) {
+            viewMode = mode;
+            document.getElementById('view-overall').className = `px-4 py-1.5 text-xs font-medium rounded-md tab-btn ${mode === 'overall' ? 'active' : 'inactive'}`;
+            document.getElementById('view-analytical').className = `px-4 py-1.5 text-xs font-medium rounded-md tab-btn border-l-0 ${mode === 'analytical' ? 'active' : 'inactive'}`;
+            
+            const kpiGrid = document.getElementById('main-kpi-grid');
+
+            if (mode === 'overall') {
+                document.getElementById('overall-container').classList.remove('hidden');
+                document.getElementById('analytical-container').classList.add('hidden');
+                if (kpiGrid) kpiGrid.classList.remove('hidden');
+                if(map) setTimeout(() => map.invalidateSize(), 50);
+            } else {
+                document.getElementById('overall-container').classList.add('hidden');
+                document.getElementById('analytical-container').classList.remove('hidden');
+                if (kpiGrid) kpiGrid.classList.add('hidden');
+                buildUI();
+            }
+        }
+
+        function navigateTo(category) {
+            activeMainTab = category;
+            activeSubTab = dashboardConfig.categories.find(c => c.id === category).subTabs[0] || 'none';
+            setViewMode('analytical');
+            document.getElementById('analytical-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function refreshData() {
+            const loader = document.getElementById('loader');
+            loader.classList.remove('hidden');
+            
+            ['criminal', 'events', 'fire', 'assets'].forEach(id => {
+                const el = document.getElementById(`kpi-${id}`);
+                if(el) {
+                    const current = parseInt(el.innerText.replace(/,/g, ''));
+                    el.innerText = (current + Math.floor(Math.random() * 11) - 5).toLocaleString(); 
+                }
+            });
+
+            setTimeout(() => {
+                if (viewMode === 'analytical') {
+                    buildUI();
+                } else {
+                    initAllMapLayers();
+                    if (overallChartInstance) {
+                        const activeBtn = document.querySelector('#overall-chart-toggles .bg-white.shadow-sm');
+                        const activeCategory = activeBtn.innerText.includes('Criminal') ? 'criminal' : 'events';
+                        overallChartInstance.data = getOverallChartData(activeCategory);
+                        overallChartInstance.update();
+                    }
+                }
+                loader.classList.add('hidden');
+            }, 800); // slightly longer loader to show off animation
+        }
+
+        // --- UI Builder Engine for Charts ---
+
+        function buildUI() {
+            renderMainTabs();
+            renderSubTabs();
+            renderCharts();
+        }
+
+        function renderMainTabs() {
+            const container = document.getElementById('main-tabs-container');
+            container.innerHTML = dashboardConfig.categories.map(cat => `
+                <button onclick="navigateTo('${cat.id}')" 
+                        class="pb-2 text-sm transition-all whitespace-nowrap border-b-2 outline-none focus:ring-2 focus:ring-emerald-500 rounded-t-sm ${activeMainTab === cat.id ? 'text-[#059669] border-[#059669] font-bold' : 'text-slate-500 hover:text-slate-700 border-transparent font-semibold'}">
+                    ${cat.label}
+                </button>
+            `).join('');
+        }
+
+        function renderSubTabs() {
+            const container = document.getElementById('sub-tabs-container');
+            const cat = dashboardConfig.categories.find(c => c.id === activeMainTab);
+            
+            const header = document.getElementById('breakdown-header');
+            if (!cat.subTabs || cat.subTabs.length === 0) {
+                container.innerHTML = '';
+                header.classList.add('hidden');
+                return;
+            }
+
+            // Show and update title
+            header.classList.remove('hidden');
+            document.getElementById('breakdown-title').innerText = `${cat.label.replace(/[^a-zA-Z &]/g, '').trim()} Breakdown`;
+
+            // Render KPI Breakdown tiles
+            container.innerHTML = cat.subTabs.map(sub => {
+                const isActive = activeSubTab === sub;
+                const count = subCategoryData[sub] || Math.floor(Math.random() * 50); // Fallback random
+                const iconName = subCategoryIcons[sub] || 'activity';
+                
+                const baseClasses = "flex-shrink-0 min-w-[160px] p-3 rounded-xl border cursor-pointer transition-all duration-200 group";
+                const activeClasses = isActive 
+                    ? "border-emerald-500 bg-emerald-50/40 shadow-sm ring-1 ring-emerald-500" 
+                    : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm";
+
+                return `
+                <div onclick="activeSubTab='${sub}'; renderCharts();" class="${baseClasses} ${activeClasses}">
+                    <div class="flex items-center gap-2 mb-2.5">
+                        <div class="p-1 rounded-md ${isActive ? 'text-emerald-600' : 'text-slate-400 group-hover:text-slate-600'}">
+                            <i data-lucide="${iconName}" class="w-4 h-4"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">${dashboardConfig.subCategoryLabels[sub]}</span>
+                    </div>
+                    <h4 class="text-2xl font-extrabold text-slate-800 ml-1">${count}</h4>
+                </div>
+                `;
+            }).join('');
+            
+            lucide.createIcons();
+        }
+
+        function renderCharts() {
+            const grid = document.getElementById('charts-grid');
+            const viewKey = `${activeMainTab}.${activeSubTab}`;
+            const chartsConfig = dashboardConfig.views[viewKey];
+
+            if (!chartsConfig) {
+                grid.innerHTML = `<div class="col-span-3 text-center py-12 text-slate-500">Configuration not found for ${viewKey}</div>`;
+                return;
+            }
+
+            Object.values(activeCharts).forEach(chart => chart.destroy());
+            activeCharts = {};
+
+            grid.innerHTML = '';
+            grid.className = `grid grid-cols-1 ${chartsConfig.length === 4 ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-4`;
+
+            chartsConfig.forEach((config, index) => {
+                let togglesHtml = '';
+                if (config.toggles && config.toggles.length > 0) {
+                    const buttons = config.toggles.map((t, i) => `
+                        <button onclick="updateChartData('${config.id}', ${i}, this)" 
+                                class="px-2 py-0.5 text-[10px] rounded font-medium transition-colors ${i === 0 ? 'bg-white shadow-sm text-emerald-700' : 'text-slate-500 hover:text-slate-800'}">
+                            ${t}
+                        </button>
+                    `).join('');
+                    togglesHtml = `<div class="flex gap-1 mb-2 bg-slate-100 p-1 rounded-lg w-max overflow-x-auto hide-scrollbar" id="toggles-${config.id}">${buttons}</div>`;
+                }
+
+                const cardHTML = `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 relative group flex flex-col h-[340px]">
+                        <div class="flex justify-between items-start mb-2 gap-2">
+                            <h3 class="font-semibold text-slate-800 text-xs leading-tight">${config.title}</h3>
+                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 whitespace-nowrap border border-emerald-100" id="pill-${config.id}">
+                                Calc...
+                            </span>
+                        </div>
+                        ${togglesHtml}
+                        <div class="relative flex-grow w-full mt-auto">
+                            <canvas id="${config.id}"></canvas>
+                        </div>
+                    </div>
+                `;
+                grid.insertAdjacentHTML('beforeend', cardHTML);
+
+                setTimeout(() => {
+                    const ctx = document.getElementById(config.id).getContext('2d');
+                    const initialData = config.generator(0);
+                    
+                    const baseOptions = {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: { padding: { top: 15 } }, 
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: { 
+                            tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 8, cornerRadius: 6, titleFont: { size: 11 }, bodyFont: { size: 11 } },
+                            datalabels: {
+                                display: (context) => context.dataset.data[context.dataIndex] > 0 && context.dataset.type !== 'line',
+                                anchor: (context) => {
+                                    const type = context.chart.config.type;
+                                    const opts = context.chart.config.options;
+                                    if (['pie', 'doughnut'].includes(type) || opts?.scales?.x?.stacked || opts?.scales?.y?.stacked) return 'center';
+                                    return 'end';
+                                },
+                                align: (context) => {
+                                    const type = context.chart.config.type;
+                                    const opts = context.chart.config.options;
+                                    if (['pie', 'doughnut'].includes(type) || opts?.scales?.x?.stacked || opts?.scales?.y?.stacked) return 'center';
+                                    return opts?.indexAxis === 'y' ? 'end' : 'top';
+                                },
+                                color: (context) => {
+                                    const type = context.chart.config.type;
+                                    const opts = context.chart.config.options;
+                                    if (['pie', 'doughnut'].includes(type) || opts?.scales?.x?.stacked || opts?.scales?.y?.stacked) return '#ffffff';
+                                    return '#475569';
+                                },
+                                font: { size: 9, weight: 'bold' },
+                                formatter: (value) => value >= 1000 ? (value/1000).toFixed(1) + 'k' : Math.round(value)
+                            }
+                        }
+                    };
+
+                    let specificOptions = {};
+                    if(typeof config.options === 'function') specificOptions = config.options(0);
+                    else if (config.options) specificOptions = config.options;
+
+                    const finalOptions = { ...baseOptions, ...specificOptions };
+                    if (specificOptions.plugins) {
+                        finalOptions.plugins = { ...baseOptions.plugins, ...specificOptions.plugins };
+                    }
+
+                    activeCharts[config.id] = new Chart(ctx, { type: config.type, data: initialData, options: finalOptions });
+                    if(config.calcPill) document.getElementById(`pill-${config.id}`).innerText = config.calcPill(initialData, 0);
+                }, 50);
+            });
+        }
+
+        function updateChartData(chartId, toggleIndex, btnElement) {
+            const toggleContainer = document.getElementById(`toggles-${chartId}`);
+            const buttons = toggleContainer.querySelectorAll('button');
+            buttons.forEach((b, i) => {
+                b.className = i === toggleIndex 
+                    ? 'px-2 py-0.5 text-[10px] rounded font-medium transition-colors bg-white shadow-sm text-emerald-700' 
+                    : 'px-2 py-0.5 text-[10px] rounded font-medium transition-colors text-slate-500 hover:text-slate-800';
+            });
+
+            const config = dashboardConfig.views[`${activeMainTab}.${activeSubTab}`].find(c => c.id === chartId);
+            if (config && activeCharts[chartId]) {
+                const chart = activeCharts[chartId];
+                const newData = config.generator(toggleIndex);
+                chart.data = newData;
+
+                if(typeof config.options === 'function') {
+                    const newOpts = config.options(toggleIndex);
+                    if(newOpts.scales) chart.options.scales = { ...chart.options.scales, ...newOpts.scales };
+                }
+                chart.update();
+                if(config.calcPill) document.getElementById(`pill-${chartId}`).innerText = config.calcPill(newData, toggleIndex);
+            }
+        }
+    </script>
+</body>
+</html>

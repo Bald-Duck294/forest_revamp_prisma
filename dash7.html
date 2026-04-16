@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Analytics - 20 Themes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* =========================================
+           1. BASE LIGHT MODE (Structure Variables)
+        ========================================= */
+        body {
+            --bg-body: #F4F6F9;
+            --bg-card: #FFFFFF;
+            --header-bg: #FFFFFF;
+            --text-main: #2A3547;
+            --text-muted: #7C8FAC;
+            --border-color: #EAEFF4;
+            --table-hover: #F8FAFC;
+            --chart-grid: #EAEFF4;
+            --input-bg: #FFFFFF;
+            --sidebar-bg: #FFFFFF;
+            --sidebar-text: #2A3547;
+            
+            /* Universal Status Colors - Light */
+            --color-warning: #d19c1b;
+            --color-danger: #902e1d;
+        }
+
+        /* =========================================
+           2. BASE DARK MODE (Structure Variables)
+        ========================================= */
+        body.dark-mode {
+            --text-main: #EAEFF4;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --table-hover: rgba(255, 255, 255, 0.05);
+            --chart-grid: rgba(255, 255, 255, 0.05);
+            
+            /* Universal Status Colors - Dark */
+            --color-warning: #fbbf24;
+            --color-danger: #ff5252;
+        }
+
+        /* =========================================
+           3. THEME FAMILIES (10 Families = 20 Themes)
+        ========================================= */
+        
+        /* --- 1. Earth (Custom Neon Green & Teal) --- */
+        body[data-theme="earth"] { --theme-primary: #165a50; --theme-secondary: #8bc34a; }
+        body[data-theme="earth"].dark-mode {
+            --bg-body: #141a18; --bg-card: #030e09; --header-bg: #165a50; --sidebar-bg: #030e09; --input-bg: #0e1410;
+            --theme-secondary: #c2fd75; --text-muted: #87bee0;
+        }
+
+        /* --- 2. Slate (Classic SaaS Blue/Emerald) --- */
+        body[data-theme="slate"] { --theme-primary: #3b82f6; --theme-secondary: #10b981; }
+        body[data-theme="slate"].dark-mode {
+            --bg-body: #0f172a; --bg-card: #1e293b; --header-bg: #1e293b; --sidebar-bg: #1e293b; --input-bg: #0f172a;
+            --theme-primary: #3b82f6; --theme-secondary: #34d399;
+        }
+
+        /* --- 3. Midnight (Neon Purple/Cyan) --- */
+        body[data-theme="midnight"] { --theme-primary: #8b5cf6; --theme-secondary: #0ea5e9; }
+        body[data-theme="midnight"].dark-mode {
+            --bg-body: #0a0b10; --bg-card: #13151f; --header-bg: #13151f; --sidebar-bg: #13151f; --input-bg: #0a0b10;
+            --theme-primary: #a78bfa; --theme-secondary: #2dd4bf;
+        }
+
+        /* --- 4. Sunset (Crimson/Orange) --- */
+        body[data-theme="sunset"] { --theme-primary: #ea580c; --theme-secondary: #e11d48; }
+        body[data-theme="sunset"].dark-mode {
+            --bg-body: #1c1917; --bg-card: #292524; --header-bg: #292524; --sidebar-bg: #292524; --input-bg: #1c1917;
+            --theme-primary: #fb923c; --theme-secondary: #f43f5e;
+        }
+
+        /* --- 5. Ocean (Deep Blue/Sky) --- */
+        body[data-theme="ocean"] { --theme-primary: #0369a1; --theme-secondary: #0284c7; }
+        body[data-theme="ocean"].dark-mode {
+            --bg-body: #082f49; --bg-card: #0c4a6e; --header-bg: #0c4a6e; --sidebar-bg: #0c4a6e; --input-bg: #082f49;
+            --theme-primary: #38bdf8; --theme-secondary: #7dd3fc;
+        }
+
+        /* --- 6. Sapphire (Navy/Light Blue) --- */
+        body[data-theme="sapphire"] { --theme-primary: #1e3a8a; --theme-secondary: #3b82f6; }
+        body[data-theme="sapphire"].dark-mode {
+            --bg-body: #020617; --bg-card: #0f172a; --header-bg: #0f172a; --sidebar-bg: #0f172a; --input-bg: #020617;
+            --theme-primary: #3b82f6; --theme-secondary: #93c5fd;
+        }
+
+        /* --- 7. Rose (Deep Red/Pink) --- */
+        body[data-theme="rose"] { --theme-primary: #be123c; --theme-secondary: #fb7185; }
+        body[data-theme="rose"].dark-mode {
+            --bg-body: #2a0412; --bg-card: #4c0519; --header-bg: #4c0519; --sidebar-bg: #4c0519; --input-bg: #2a0412;
+            --theme-primary: #fb7185; --theme-secondary: #fda4af;
+        }
+
+        /* --- 8. Emerald (Rich Greens) --- */
+        body[data-theme="emerald"] { --theme-primary: #047857; --theme-secondary: #10b981; }
+        body[data-theme="emerald"].dark-mode {
+            --bg-body: #022c22; --bg-card: #064e3b; --header-bg: #064e3b; --sidebar-bg: #064e3b; --input-bg: #022c22;
+            --theme-primary: #34d399; --theme-secondary: #6ee7b7;
+        }
+
+        /* --- 9. Amethyst (Deep Purples) --- */
+        body[data-theme="amethyst"] { --theme-primary: #6d28d9; --theme-secondary: #8b5cf6; }
+        body[data-theme="amethyst"].dark-mode {
+            --bg-body: #1e1b4b; --bg-card: #2e1065; --header-bg: #2e1065; --sidebar-bg: #2e1065; --input-bg: #1e1b4b;
+            --theme-primary: #a78bfa; --theme-secondary: #c4b5fd;
+        }
+
+        /* --- 10. Cyberpunk (Hot Pink/Cyan) --- */
+        body[data-theme="cyberpunk"] { --theme-primary: #db2777; --theme-secondary: #06b6d4; }
+        body[data-theme="cyberpunk"].dark-mode {
+            --bg-body: #0f172a; --bg-card: #1e293b; --header-bg: #1e293b; --sidebar-bg: #1e293b; --input-bg: #0f172a;
+            --theme-primary: #ec4899; --theme-secondary: #22d3ee;
+        }
+
+        /* =========================================
+           4. GLOBAL CSS & LAYOUT
+        ========================================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease; }
+        body { background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 1.5rem 1rem; z-index: 10; }
+        .logo { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--text-main); margin-bottom: 2rem; padding-left: 10px; }
+        .logo i { color: var(--theme-secondary); }
+        
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; color: var(--sidebar-text); font-weight: 500; cursor: pointer; margin-bottom: 8px; font-size: 0.95rem; }
+        .nav-item:hover { background: var(--table-hover); }
+        .nav-item.active { background-color: color-mix(in srgb, var(--theme-primary) 15%, transparent); color: var(--theme-primary); font-weight: 600; }
+        body.dark-mode .nav-item.active { color: var(--theme-secondary); background-color: color-mix(in srgb, var(--theme-secondary) 15%, transparent); }
+
+        /* Main Layout & Header */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .header { height: 70px; background-color: var(--header-bg); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; position: sticky; top: 0; z-index: 5; border-bottom: 1px solid var(--border-color); }
+        .header-title { font-size: 1.2rem; font-weight: 600; color: var(--text-main); }
+        body[data-theme="earth"].dark-mode .header-title { color: #FFFFFF; }
+        
+        .header-actions { display: flex; align-items: center; gap: 1.5rem; }
+        .icon-btn { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
+        .icon-btn:hover { color: var(--theme-secondary); }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; color: var(--text-main); }
+        body[data-theme="earth"].dark-mode .user-profile { color: #FFFFFF; }
+        .avatar { width: 35px; height: 35px; border-radius: 50%; background-image: url('https://i.pravatar.cc/100?img=11'); background-size: cover; border: 2px solid var(--theme-secondary); }
+
+        /* Theme Selector Dropdown */
+        .theme-selector { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; outline: none; }
+
+        /* View Containers */
+        .view-section { display: none; padding: 2rem; max-width: 1400px; width: 100%; margin: 0 auto; }
+        .view-section.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Cards & Buttons */
+        .card { background: var(--bg-card); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border-color); margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        
+        .btn { padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-primary { background: var(--theme-primary); color: white; }
+        body.dark-mode .btn-primary { background: var(--theme-secondary); color: var(--bg-card); }
+        .btn-warning { background: var(--color-warning); color: #000; }
+        .btn-outline { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); }
+        .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+        /* Form Elements */
+        .filter-bar { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-group label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+        select, input[type="date"] { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); outline: none; font-size: 0.9rem; min-width: 150px; }
+        
+        /* KPI Boxes */
+        .kpi-grid { display: flex; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .kpi-box { background: var(--bg-card); border-radius: 12px; padding: 1.25rem 1.5rem; flex: 1; min-width: 200px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 1rem; }
+        .kpi-icon { width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .kpi-info h4 { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+        .kpi-info h2 { font-size: 1.5rem; color: var(--text-main); }
+
+        /* Table Styling */
+        .table-container { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th { text-align: left; padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color); cursor: pointer; user-select: none; transition: background 0.2s; }
+        th:hover { background-color: var(--table-hover); color: var(--text-main); }
+        th i { margin-left: 5px; font-size: 0.75rem; opacity: 0.5; }
+        
+        td { padding: 1rem; border-bottom: 1px dashed var(--border-color); font-size: 0.9rem; font-weight: 500; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: var(--table-hover); }
+        
+        .user-cell { display: flex; align-items: center; gap: 12px; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 10px; background-color: var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-muted); overflow: hidden; }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-name { font-weight: 600; color: var(--text-main); display: block; }
+        
+        /* Dynamic Badges (Using color-mix) */
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+        .badge-success { background: color-mix(in srgb, var(--theme-secondary) 15%, transparent); color: var(--theme-secondary); }
+        .badge-warning { background: color-mix(in srgb, var(--color-warning) 15%, transparent); color: var(--color-warning); }
+        .badge-danger { background: color-mix(in srgb, var(--color-danger) 15%, transparent); color: var(--color-danger); }
+        .badge-primary { background: color-mix(in srgb, var(--theme-primary) 15%, transparent); color: var(--theme-primary); }
+
+        .action-link { color: var(--theme-primary); text-decoration: none; font-weight: 600; font-size: 0.85rem; }
+        body.dark-mode .action-link { color: var(--theme-secondary); }
+        .action-link:hover { text-decoration: underline; }
+
+        /* Charts */
+        .chart-row { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+        @media(max-width: 900px) { .chart-row { grid-template-columns: 1fr; } }
+        .chart-wrapper { position: relative; height: 300px; width: 100%; margin-top: 1rem; }
+        
+    </style>
+</head>
+<body class="dark-mode" data-theme="earth"> <aside class="sidebar">
+        <div class="logo"><i class="fa-solid fa-shield-halved"></i> PatrolOS</div>
+        <div class="nav-item active" onclick="switchTab('overview', this)">
+            <i class="fa-solid fa-chart-pie"></i> Attendance Overview
+        </div>
+        <div class="nav-item" onclick="switchTab('logs', this)">
+            <i class="fa-solid fa-list-check"></i> Attendance Logs
+        </div>
+    </aside>
+
+    <div class="main-wrapper">
+        
+        <header class="header">
+            <div class="header-title">Patrol Analytics</div>
+            <div class="header-actions">
+                
+                <select id="theme-select" class="theme-selector" onchange="changeThemeFamily(this.value)">
+                    <option value="earth" selected>🌲 Earth Theme</option>
+                    <option value="slate">💻 Slate Theme</option>
+                    <option value="midnight">🌃 Midnight Theme</option>
+                    <option value="sunset">🌅 Sunset Theme</option>
+                    <option value="ocean">🌊 Ocean Theme</option>
+                    <option value="sapphire">💎 Sapphire Theme</option>
+                    <option value="rose">🌹 Rose Theme</option>
+                    <option value="emerald">🌿 Emerald Theme</option>
+                    <option value="amethyst">🔮 Amethyst Theme</option>
+                    <option value="cyberpunk">🦾 Cyberpunk Theme</option>
+                </select>
+
+                <button class="icon-btn" onclick="toggleDarkMode()" id="theme-toggle"><i class="fa-solid fa-moon"></i></button>
+                
+                <button class="icon-btn"><i class="fa-regular fa-bell"></i></button>
+                <div class="user-profile">
+                    <div class="avatar"></div>
+                    <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                        <span style="font-weight: 600; font-size: 0.9rem;">Anil SupreAdmin</span>
+                        <span style="font-size: 0.75rem; opacity: 0.8;">Superadmin</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="view-overview" class="view-section active">
+            
+            <div class="flex-between" style="margin-bottom: 1.5rem;">
+                <div class="kpi-grid" style="margin-bottom: 0;">
+                    <div class="kpi-box">
+                        <div class="kpi-icon badge-success"><i class="fa-solid fa-user-check"></i></div>
+                        <div class="kpi-info"><h4>Present</h4><h2>152</h2></div>
+                    </div>
+                    <div class="kpi-box">
+                        <div class="kpi-icon badge-warning"><i class="fa-regular fa-clock"></i></div>
+                        <div class="kpi-info"><h4>Late</h4><h2>12</h2></div>
+                    </div>
+                    <div class="kpi-box">
+                        <div class="kpi-icon badge-primary"><i class="fa-solid fa-file-invoice"></i></div>
+                        <div class="kpi-info"><h4>Requests</h4><h2>5</h2></div>
+                    </div>
+                    <div class="kpi-box">
+                        <div class="kpi-icon badge-danger"><i class="fa-solid fa-building"></i></div>
+                        <div class="kpi-info"><h4>Absent</h4><h2>3</h2></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-between" style="margin-bottom: 1.5rem;">
+                <div></div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="date" class="btn-outline">
+                    <button class="btn btn-outline"><i class="fa-regular fa-calendar"></i> Filter Date</button>
+                    <button class="btn btn-warning"><i class="fa-solid fa-download"></i> Export Data</button>
+                </div>
+            </div>
+
+            <div class="chart-row">
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="flex-between">
+                        <div>
+                            <h3 style="font-size: 1.1rem; font-weight: 600;">Weekly Attendance Trends</h3>
+                            <p style="font-size: 0.8rem; color: var(--text-muted);">Stacked pill chart representation</p>
+                        </div>
+                        <select>
+                            <option>Total Attendance</option>
+                            <option>Site A Only</option>
+                        </select>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 0;">
+                    <h3 style="font-size: 1.1rem; font-weight: 600; text-align: center; margin-bottom: 1rem;">Status Distribution</h3>
+                    <div class="chart-wrapper" style="height: 200px;">
+                        <canvas id="donutChart"></canvas>
+                    </div>
+                    <div style="margin-top: 1.5rem; font-size: 0.85rem; padding: 0 10px;" id="donut-legend">
+                        </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">Recent Check-ins</h3>
+                <div class="table-container">
+                    <table id="recentTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('recentTable', 0)">User <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('recentTable', 1)">Time <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('recentTable', 2)">Site <i class="fa-solid fa-sort"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><div class="user-cell"><div class="user-avatar"><i class="fa-solid fa-user"></i></div><span class="user-name">Ramesh Singh</span></div></td>
+                                <td>09:02 AM</td>
+                                <td>North Zone</td>
+                            </tr>
+                            <tr>
+                                <td><div class="user-cell"><div class="user-avatar"><i class="fa-solid fa-user"></i></div><span class="user-name">Amit Kumar</span></div></td>
+                                <td>09:15 AM</td>
+                                <td>South Gate</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-logs" class="view-section">
+            
+            <div class="card">
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label>Date Range</label>
+                        <select><option>Last 30 Days</option></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Employee</label>
+                        <select><option>All Employees</option></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Site</label>
+                        <select><option>All Sites</option></select>
+                    </div>
+                    <div class="filter-group" style="justify-content: flex-end;">
+                        <button class="btn btn-primary" style="height: 35px; padding: 0 20px;">Apply</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="table-container">
+                    <table id="logsTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('logsTable', 0)">Employee Name <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('logsTable', 1)">Site Name <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('logsTable', 2)">Duration <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('logsTable', 3)">Status <i class="fa-solid fa-sort"></i></th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="user-avatar"><img src="https://i.pravatar.cc/150?img=33" alt="Guard 1"></div>
+                                        <span class="user-name">Guard 1</span>
+                                    </div>
+                                </td>
+                                <td>Site A</td>
+                                <td>8h 00m</td>
+                                <td><span class="badge badge-success">On-time</span></td>
+                                <td><a href="#" class="action-link">View Details</a></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="user-avatar"><img src="https://i.pravatar.cc/150?img=12" alt="Guard 2"></div>
+                                        <span class="user-name">Guard 2</span>
+                                    </div>
+                                </td>
+                                <td>Site A</td>
+                                <td>7h 55m</td>
+                                <td><span class="badge badge-warning">Late (5m)</span></td>
+                                <td><a href="#" class="action-link">View Details</a></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="user-avatar"><img src="https://i.pravatar.cc/150?img=11" alt="Guard 5"></div>
+                                        <span class="user-name">Guard 5</span>
+                                    </div>
+                                </td>
+                                <td>Site C</td>
+                                <td>-</td>
+                                <td><span class="badge badge-danger">Absent</span></td>
+                                <td><a href="#" class="action-link">View Details</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 1. Tab Switching
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + tabId).classList.add('active');
+        }
+
+        let barChart, donutChart;
+
+        // 2. THEME SWITCHER LOGIC
+        function changeThemeFamily(themeValue) {
+            document.body.setAttribute('data-theme', themeValue);
+            renderCharts();
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const toggleIcon = document.getElementById('theme-toggle').querySelector('i');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                toggleIcon.classList.remove('fa-moon');
+                toggleIcon.classList.add('fa-sun');
+            } else {
+                toggleIcon.classList.remove('fa-sun');
+                toggleIcon.classList.add('fa-moon');
+            }
+            renderCharts();
+        }
+
+        // 3. Dynamic Chart Rendering (Pill-style Stacked Bars)
+        function renderCharts() {
+            const rootStyle = getComputedStyle(document.body);
+            const textColor = rootStyle.getPropertyValue('--text-muted').trim();
+            const gridColor = rootStyle.getPropertyValue('--chart-grid').trim();
+            const cardBg = rootStyle.getPropertyValue('--bg-card').trim();
+            
+            // Dynamic Colors
+            const primaryColor = rootStyle.getPropertyValue('--theme-primary').trim();   
+            const secondaryColor = rootStyle.getPropertyValue('--theme-secondary').trim(); 
+            const dangerColor = rootStyle.getPropertyValue('--color-danger').trim();     
+
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = textColor;
+
+            if(barChart) barChart.destroy();
+            if(donutChart) donutChart.destroy();
+
+            // A. Stacked Bar Chart (Pill Design with visual gap)
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            barChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        {
+                            label: 'Present',
+                            data: [4000, 3500, 3000, 2500, 4200, 2500, 3200],
+                            backgroundColor: primaryColor, 
+                            borderColor: cardBg, // Creates the gap between stacks
+                            borderWidth: 2,
+                            borderRadius: 50, // Makes the bar fully rounded (pill shape)
+                            borderSkipped: false,
+                            barPercentage: 0.45
+                        },
+                        {
+                            label: 'Late/Absent',
+                            data: [1000, 3000, 4000, 3000, 2800, 3000, 2200],
+                            backgroundColor: secondaryColor, 
+                            borderColor: cardBg,
+                            borderWidth: 2,
+                            borderRadius: 50, // Makes the top bar rounded too
+                            borderSkipped: false,
+                            barPercentage: 0.45
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } } 
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } }, 
+                        y: { 
+                            stacked: true,
+                            grid: { color: gridColor, drawBorder: false },
+                            ticks: { callback: function(value) { return value/1000 + 'k'; } }
+                        }
+                    }
+                }
+            });
+
+            // B. Donut Chart
+            const ctxDonut = document.getElementById('donutChart').getContext('2d');
+            donutChart = new Chart(ctxDonut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Present', 'Late', 'Absent'],
+                    datasets: [{
+                        data: [152, 12, 3],
+                        backgroundColor: [primaryColor, secondaryColor, dangerColor],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%', 
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Sync Legend Colors dynamically
+            document.getElementById('donut-legend').innerHTML = `
+                <div class="flex-between" style="margin-bottom: 8px;">
+                    <span><i class="fa-solid fa-circle" style="color: ${primaryColor}; font-size: 0.7rem; margin-right: 5px;"></i> Present</span>
+                    <strong style="color: var(--text-main);">152</strong>
+                </div>
+                <div class="flex-between" style="margin-bottom: 8px;">
+                    <span><i class="fa-solid fa-circle" style="color: ${secondaryColor}; font-size: 0.7rem; margin-right: 5px;"></i> Late</span>
+                    <strong style="color: var(--text-main);">12</strong>
+                </div>
+                <div class="flex-between">
+                    <span><i class="fa-solid fa-circle" style="color: ${dangerColor}; font-size: 0.7rem; margin-right: 5px;"></i> Absent</span>
+                    <strong style="color: var(--text-main);">3</strong>
+                </div>
+            `;
+        }
+
+        // 4. Table Sorting Logic
+        function sortTable(tableId, n) {
+            let table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.getElementById(tableId);
+            switching = true; dir = "asc"; 
+            
+            let headers = table.getElementsByTagName("TH");
+            for(let th of headers) { let icon = th.querySelector('i'); if(icon) icon.className = 'fa-solid fa-sort'; }
+
+            while (switching) {
+                switching = false; rows = table.rows;
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    
+                    let xContent = x.innerText.toLowerCase().trim();
+                    let yContent = y.innerText.toLowerCase().trim();
+
+                    if (dir == "asc") { if (xContent > yContent) { shouldSwitch = true; break; } } 
+                    else if (dir == "desc") { if (xContent < yContent) { shouldSwitch = true; break; } }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true; switchcount++;
+                } else {
+                    if (switchcount == 0 && dir == "asc") { dir = "desc"; switching = true; }
+                }
+            }
+            let clickedIcon = headers[n].querySelector('i');
+            if(clickedIcon) clickedIcon.className = dir === 'asc' ? 'fa-solid fa-sort-up' : 'fa-solid fa-sort-down';
+        }
+
+        window.onload = renderCharts;
+    </script>
+</body>
+</html>

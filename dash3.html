@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Theme - Plantation UI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* === CUSTOM THEME VARIABLES === */
+        :root {
+            /* Light Theme */
+            --bg-body: #F4F6F9;
+            --bg-card: #FFFFFF;
+            --header-bg: #FFFFFF;
+            --text-main: #2A3547;
+            --text-muted: #7C8FAC;
+            --border-color: #EAEFF4;
+            --table-border: #EAEFF4;
+            --table-hover: #F8FAFC;
+            --card-border: #EAEFF4;
+            
+            /* Custom Accents */
+            --primary: #165a50;       /* Pale green/Teal */
+            --primary-hover: #195b4f; 
+            --secondary: #c2fd75;     /* Yellowish */
+            --warning: #d19c1b;       /* Orange */
+            --danger: #902e1d;        /* Dark Red */
+            
+            /* Sidebar */
+            --sidebar-bg: #FFFFFF;
+            --sidebar-active-bg: #165a50;
+            --sidebar-active-text: #FFFFFF;
+            --sidebar-text: #2A3547;
+            
+            /* Chart Grids */
+            --chart-grid: #EAEFF4;
+            
+            /* Table & Badge Elements (Light) */
+            --code-color: #64748B;
+            --badge-site-bg: #F1F5F9;
+            --badge-site-text: #64748B;
+            --badge-phase-bg: rgba(209, 156, 27, 0.1);
+            --badge-phase-text: #d19c1b;
+            --badge-status-bg: rgba(22, 90, 80, 0.1);
+            --badge-status-text: #165a50;
+            --btn-action-bg: #24699d; /* Muted Blue */
+            --btn-action-text: #ffffff;
+            --btn-action-hover: #1e1c98;
+        }
+
+        /* Custom Dark Theme Override */
+        body.dark-mode {
+            --bg-body: #141a18;       /* Main background */
+            --bg-card: #030e09;       /* Card background */
+            --header-bg: #165a50;     
+            
+            --text-main: #EAEFF4;
+            --text-muted: #87bee0;    /* Light blue for readability */
+            --border-color: #195b4f;  
+            --table-border: rgba(135, 190, 224, 0.1); /* Very faint table lines */
+            --table-hover: #0e1410;   
+            --card-border: transparent; /* Transparent borders as requested */
+            
+            --sidebar-bg: #030e09;
+            --sidebar-text: #EAEFF4;
+            --sidebar-active-bg: #c2fd75; 
+            --sidebar-active-text: #030e09; 
+            
+            --chart-grid: rgba(25, 91, 79, 0.4);
+            
+            /* Table & Badge Elements (Dark) */
+            --code-color: #87bee0;    /* Soft Grey/Blue for codes and headers */
+            --badge-site-bg: rgba(135, 190, 224, 0.08);
+            --badge-site-text: #87bee0;
+            --badge-phase-bg: rgba(194, 153, 74, 0.15); /* Orange/Gold tint */
+            --badge-phase-text: #c2994a;
+            --badge-status-bg: rgba(22, 90, 80, 0.3); /* Teal tint */
+            --badge-status-text: #c2fd75; /* Bright neon green */
+            --btn-action-bg: #24699d; /* Solid muted blue */
+            --btn-action-text: #ffffff;
+            --btn-action-hover: #1e1c98;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease; }
+
+        body { background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* === SIDEBAR === */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 1rem;
+            z-index: 10;
+        }
+
+        .logo { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--text-main); margin-bottom: 2rem; padding-left: 10px; }
+        .logo i { color: var(--primary); }
+        body.dark-mode .logo i { color: var(--secondary); }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px;
+            color: var(--sidebar-text); font-weight: 500; cursor: pointer; margin-bottom: 8px; font-size: 0.95rem;
+        }
+        .nav-item:hover { background: var(--table-hover); }
+        .nav-item.active { background-color: var(--sidebar-active-bg); color: var(--sidebar-active-text); }
+        .nav-item.active i { color: var(--sidebar-active-text); }
+
+        /* === MAIN LAYOUT === */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+
+        /* === HEADER === */
+        .header {
+            height: 70px; background-color: var(--header-bg);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 2rem; position: sticky; top: 0; z-index: 5;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .header-title { font-size: 1.2rem; font-weight: 600; color: inherit; }
+        body.dark-mode .header-title { color: #FFFFFF; } 
+        
+        .header-actions { display: flex; align-items: center; gap: 1.5rem; }
+        .icon-btn { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
+        body.dark-mode .icon-btn { color: #c2fd75; } 
+        .icon-btn:hover { color: var(--text-main); }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; }
+        body.dark-mode .user-profile span { color: #FFFFFF; } 
+        .avatar { width: 35px; height: 35px; border-radius: 50%; background-image: url('https://i.pravatar.cc/100?img=11'); background-size: cover; border: 2px solid var(--secondary); }
+
+        /* === VIEW CONTAINERS === */
+        .view-section { display: none; padding: 2rem; max-width: 1400px; width: 100%; margin: 0 auto; }
+        .view-section.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* === CARDS === */
+        .card { background: var(--bg-card); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid var(--card-border); }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+
+        /* Header Buttons */
+        .btn { padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: white; }
+        body.dark-mode .btn-primary { background: var(--secondary); color: var(--bg-card); }
+        .btn-warning { background: var(--warning); color: white; }
+        body.dark-mode .btn-warning { color: #000; }
+        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
+        
+        /* Table Badges & Action Buttons */
+        .badge { padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+        .badge-site { background: var(--badge-site-bg); color: var(--badge-site-text); }
+        .badge-phase { background: var(--badge-phase-bg); color: var(--badge-phase-text); }
+        .badge-status { background: var(--badge-status-bg); color: var(--badge-status-text); }
+        
+        .btn-workflow { background: var(--btn-action-bg); color: var(--btn-action-text); padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 500; border: none; transition: 0.2s; cursor: pointer; }
+        .btn-workflow:hover { background: var(--btn-action-hover); }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th { text-align: left; padding: 1rem; color: var(--code-color); font-size: 0.85rem; font-weight: 600; border-bottom: 1px dashed var(--table-border); }
+        td { padding: 1rem; border-bottom: 1px dashed var(--table-border); font-size: 0.9rem; font-weight: 500; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: var(--table-hover); }
+        .text-code { color: var(--code-color); font-weight: 600; }
+
+        /* --- DASHBOARD VIEW --- */
+        .kpi-container { display: flex; gap: 1.5rem; flex: 1; margin-bottom: 1.5rem; }
+        .kpi-box { background: var(--bg-card); border-radius: 12px; padding: 1.5rem; flex: 1; border: 1px solid var(--card-border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .kpi-title { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600;}
+        .kpi-val { font-size: 2rem; font-weight: 700; color: var(--text-main); }
+
+        /* --- ANALYTICS VIEW --- */
+        .analytics-top-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+        .analytics-bottom-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+        
+        .chart-container { position: relative; height: 280px; width: 100%; margin-top: 1rem; }
+        .chart-container-donut { position: relative; height: 230px; width: 100%; display: flex; justify-content: center; }
+
+        /* Progress Bars */
+        .progress-group { margin-bottom: 1.25rem; }
+        .progress-label { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted); }
+        .progress-track { width: 100%; height: 6px; background: var(--table-hover); border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 10px; }
+        
+        /* Graph Highlighters */
+        .text-yellow { color: var(--secondary); }
+        .text-orange { color: var(--warning); }
+        .text-teal { color: var(--primary); }
+
+    </style>
+</head>
+<body class="dark-mode">
+    <aside class="sidebar">
+        <div class="logo"><i class="fa-solid fa-leaf"></i> NiceDash</div>
+        <div class="nav-item active" onclick="switchTab('dashboard', this)">
+            <i class="fa-solid fa-table-cells-large"></i> Plantation Dashboard
+        </div>
+        <div class="nav-item" onclick="switchTab('analytics', this)">
+            <i class="fa-solid fa-chart-line"></i> Plantation Analytics
+        </div>
+    </aside>
+
+    <div class="main-wrapper">
+        
+        <header class="header">
+            <div class="header-title">Patrol Analytics</div>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="toggleTheme()" id="theme-toggle"><i class="fa-solid fa-sun"></i></button>
+                <button class="icon-btn"><i class="fa-regular fa-bell"></i></button>
+                <div class="user-profile">
+                    <div class="avatar"></div>
+                    <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                        <span style="font-weight: 600; font-size: 0.9rem;">Anil SupreAdmin</span>
+                        <span style="font-size: 0.75rem; opacity: 0.8;">Superadmin</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="view-dashboard" class="view-section active">
+            
+            <div class="flex-between" style="margin-bottom: 1.5rem;">
+                <div style="width: 100%; display: flex; gap: 1.5rem;">
+                    <div class="kpi-box">
+                        <div class="kpi-title">Total Plantations</div>
+                        <div class="kpi-val">3</div>
+                    </div>
+                    <div class="kpi-box">
+                        <div class="kpi-title">Active</div>
+                        <div class="kpi-val text-yellow">3</div>
+                    </div>
+                    <div class="kpi-box">
+                        <div class="kpi-title">Completed</div>
+                        <div class="kpi-val text-teal">0</div>
+                    </div>
+                    <div class="kpi-box">
+                        <div class="kpi-title">Pending</div>
+                        <div class="kpi-val text-orange">0</div>
+                    </div>
+                </div>
+                <div style="margin-left: 1.5rem;">
+                    <button class="btn btn-primary">+ Add Plantation</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="font-size: 1.1rem; margin-bottom: 1rem; font-weight: 600;">Plantation List</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Site</th>
+                                <th>Phase</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-code">PLT003</td>
+                                <td>Kartik Kanzode</td>
+                                <td><span class="badge badge-site">demo site 1</span></td>
+                                <td><span class="badge badge-phase">Identification</span></td>
+                                <td><span class="badge badge-status">Active</span></td>
+                                <td style="text-align: right;"><button class="btn-workflow">Workflow &rarr;</button></td>
+                            </tr>
+                            <tr>
+                                <td class="text-code">PLT002</td>
+                                <td>dfhusdn 2</td>
+                                <td><span class="badge badge-site">demo site 1</span></td>
+                                <td><span class="badge badge-phase">Identification</span></td>
+                                <td><span class="badge badge-status">Active</span></td>
+                                <td style="text-align: right;"><button class="btn-workflow">Workflow &rarr;</button></td>
+                            </tr>
+                            <tr>
+                                <td class="text-code">PLT001</td>
+                                <td>Plantation 1</td>
+                                <td><span class="badge badge-site">demo site 1</span></td>
+                                <td><span class="badge badge-phase">Observation</span></td>
+                                <td><span class="badge badge-status">Active</span></td>
+                                <td style="text-align: right;"><button class="btn-workflow">Workflow &rarr;</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-analytics" class="view-section">
+            
+            <div class="flex-between" style="margin-bottom: 1.5rem;">
+                <div>
+                    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 4px;">Plantation Analytics</h2>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Real-time monitoring of crop performance and resource distribution.</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-outline"><i class="fa-regular fa-calendar"></i> Last 6 Months</button>
+                    <button class="btn btn-warning"><i class="fa-solid fa-download"></i> Export Report</button>
+                </div>
+            </div>
+
+            <div class="analytics-top-grid">
+                <div class="card">
+                    <div class="flex-between">
+                        <div>
+                            <h3 style="font-size: 1.1rem; font-weight: 600;">Yield Forecast vs Actual</h3>
+                            <p style="font-size: 0.8rem; color: var(--text-muted);">Comparison of projected growth vs measured output</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 1.5rem; font-weight: 700;" class="text-orange">420 Tons</div>
+                            <div style="font-size: 0.8rem; font-weight: 600;" class="text-teal">+12.5% vs target</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="yieldChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="font-size: 1.1rem; font-weight: 600; text-align: left; margin-bottom: 1rem;">Crop Health Distribution</h3>
+                    <div class="chart-container-donut">
+                        <canvas id="healthChart"></canvas>
+                    </div>
+                    <div style="margin-top: 1.5rem; font-size: 0.85rem; padding: 0 10px;">
+                        <div class="flex-between" style="margin-bottom: 8px;">
+                            <span><i class="fa-solid fa-circle text-teal" style="font-size: 0.7rem; margin-right: 5px;"></i> Optimal</span>
+                            <strong style="color: var(--text-main);">75%</strong>
+                        </div>
+                        <div class="flex-between" style="margin-bottom: 8px;">
+                            <span><i class="fa-solid fa-circle text-orange" style="font-size: 0.7rem; margin-right: 5px;"></i> Action Required</span>
+                            <strong style="color: var(--text-main);">15%</strong>
+                        </div>
+                        <div class="flex-between">
+                            <span><i class="fa-solid fa-circle" style="color: var(--danger); font-size: 0.7rem; margin-right: 5px;"></i> Critical</span>
+                            <strong style="color: var(--text-main);">10%</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analytics-bottom-grid">
+                <div class="card">
+                    <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1.5rem;">Resource Utilization</h3>
+                    
+                    <div class="progress-group">
+                        <div class="progress-label"><span>Water Irrigation</span> <span>72%</span></div>
+                        <div class="progress-track"><div class="progress-fill" style="width: 72%; background: #87bee0;"></div></div>
+                    </div>
+                    <div class="progress-group">
+                        <div class="progress-label"><span>Fertilizer Stock</span> <span>66%</span></div>
+                        <div class="progress-track"><div class="progress-fill" style="width: 66%; background: var(--primary);"></div></div>
+                    </div>
+                    <div class="progress-group" style="margin-bottom: 0;">
+                        <div class="progress-label"><span>Labor Efficiency</span> <span>94%</span></div>
+                        <div class="progress-track"><div class="progress-fill" style="width: 94%; background: var(--warning);"></div></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="flex-between" style="margin-bottom: 1rem;">
+                        <h3 style="font-size: 1.1rem; font-weight: 600;">Top Performing Plantations</h3>
+                        <a href="#" class="text-orange" style="font-size: 0.9rem; text-decoration: none; font-weight: 600;">View All &rarr;</a>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Plantation</th>
+                                    <th>Crop</th>
+                                    <th>Efficiency</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="font-weight: 600;">Plantation 1</td>
+                                    <td>Neem</td>
+                                    <td class="text-yellow">1</td>
+                                    <td><span class="badge badge-status">Active</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 600;">dfhusdn 2</td>
+                                    <td>N/A</td>
+                                    <td class="text-yellow">0</td>
+                                    <td><span class="badge badge-status">Active</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 600;">Kartik Kanzode</td>
+                                    <td>N/A</td>
+                                    <td class="text-yellow">0</td>
+                                    <td><span class="badge badge-status">Active</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + tabId).classList.add('active');
+        }
+
+        let yieldChart, healthChart;
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const toggleIcon = document.getElementById('theme-toggle').querySelector('i');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                toggleIcon.classList.remove('fa-moon');
+                toggleIcon.classList.add('fa-sun');
+            } else {
+                toggleIcon.classList.remove('fa-sun');
+                toggleIcon.classList.add('fa-moon');
+            }
+            
+            renderCharts();
+        }
+
+        function renderCharts() {
+            const rootStyle = getComputedStyle(document.body);
+            const textColor = rootStyle.getPropertyValue('--text-muted').trim();
+            const gridColor = rootStyle.getPropertyValue('--chart-grid').trim();
+            
+            const tealColor = rootStyle.getPropertyValue('--primary').trim();
+            const yellowColor = rootStyle.getPropertyValue('--secondary').trim();
+            const orangeColor = rootStyle.getPropertyValue('--warning').trim();
+            const dangerColor = rootStyle.getPropertyValue('--danger').trim();
+            
+            const isDark = document.body.classList.contains('dark-mode');
+            const lineChartColor = isDark ? yellowColor : tealColor;
+            
+            const gradientRgb = isDark ? '194, 253, 117' : '22, 90, 80';
+
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = textColor;
+
+            if(yieldChart) yieldChart.destroy();
+            if(healthChart) healthChart.destroy();
+
+            const ctxYield = document.getElementById('yieldChart').getContext('2d');
+            const gradient = ctxYield.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, `rgba(${gradientRgb}, 0.3)`);
+            gradient.addColorStop(1, `rgba(${gradientRgb}, 0.0)`);
+
+            yieldChart = new Chart(ctxYield, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        data: [0.96, 0.98, 1.02, 1.05, 1.04, 1.01, 1.03, 1.06, 1.02, 1.05, 1.07, 1.08],
+                        borderColor: lineChartColor,
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: lineChartColor
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false } }, 
+                        y: { 
+                            min: 0.94, max: 1.08,
+                            grid: { color: gridColor, drawBorder: false }
+                        }
+                    }
+                }
+            });
+
+            const ctxHealth = document.getElementById('healthChart').getContext('2d');
+            healthChart = new Chart(ctxHealth, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Optimal', 'Action Required', 'Critical'],
+                    datasets: [{
+                        data: [75, 15, 10],
+                        backgroundColor: [tealColor, orangeColor, dangerColor],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%', 
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        window.onload = renderCharts;
+    </script>
+</body>
+</html>
