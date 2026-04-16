@@ -539,6 +539,20 @@ model daily_updates {
   timestamp   DateTime @default(now()) @db.DateTime(0)
 }
 
+model CompanyLabel {
+  id           Int       @id @default(autoincrement())
+  company_id   Int       @map("company_id")
+  
+  // Mapped to Json with the specific LongText native type
+  labels       Json      @default("{}") @db.LongText
+  translations Json      @default("{}") @db.LongText
+  
+  created_at   DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updated_at   DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@map("company_labels") // Replace with your actual table name
+}
+
 model deductions {
   id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
   name        String    @db.VarChar(255)
@@ -652,6 +666,26 @@ model forest_task_user {
 
   @@index([task_id], map: "task_id_foreign_forest_task_user")
   @@index([user_id], map: "user_id_foreign_forest_task_user")
+}
+
+
+model ForestReportConfig {
+  id           Int       @id @default(autoincrement())
+  category     String?   @db.VarChar(191)
+  report_type  String?   @map("report_type") @db.VarChar(191)
+  
+  // This tells Prisma: "Treat this as JSON in code, 
+  // but I know it's a LongText in the DB"
+  fields       Json?     @db.LongText
+  
+  is_active    Int?      @default(1) @map("is_active") @db.TinyInt
+  company_id   Int?      @map("company_id")
+  created_at   DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updated_at   DateTime? @updatedAt @map("updated_at") @db.Timestamp(0)
+  translation  Json?     @db.LongText // Changed this to Json too since it's longtext/bin
+  patrol_logs  Int?      @default(0) @map("patrol_logs") @db.TinyInt
+
+  @@map("forest_report_configs")
 }
 
 model forest_tasks {
